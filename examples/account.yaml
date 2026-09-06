@@ -1,0 +1,11 @@
+apiVersion: cloudflare.cfrs.dev/v1alpha1
+kind: Account
+metadata:
+  name: nas1k
+  namespace: default
+spec:
+  id: f78862bae12573bd3940958787c11430
+  apiToken:
+    secretRef:
+      name: cf-token
+      key: token
