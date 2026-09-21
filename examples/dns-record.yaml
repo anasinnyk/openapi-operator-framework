@@ -1,0 +1,13 @@
+apiVersion: cloudflare.cfrs.dev/v1alpha1
+kind: DnsRecord
+metadata:
+  name: www-example-com
+  namespace: default
+spec:
+  zoneRef:
+    name: example-com
+  type: A
+  name: www.example.com
+  content: 192.0.2.1
+  ttl: 1
+  proxied: true

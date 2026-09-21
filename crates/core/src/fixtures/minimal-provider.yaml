@@ -1,0 +1,147 @@
+version: 1
+provider: cloudflare
+
+resources:
+  account:
+    api_version: cloudflare.example.io/v1alpha1
+    kind: Account
+    spec_schema:
+      pointer: "#/components/schemas/Account"
+    identifiers:
+      external_id:
+        type: field
+        path: spec.id
+    credentials:
+      via: []
+      security_scheme: api_token
+    lifecycle:
+      observe: account.get
+      create: null
+      update: null
+      delete: null
+
+  zone:
+    api_version: cloudflare.example.io/v1alpha1
+    kind: Zone
+    spec_schema:
+      pointer: "#/components/schemas/Zone"
+    identifiers:
+      external_id:
+        type: field
+        path: status.id
+    references:
+      account:
+        from: spec.accountRef
+        target: account
+    credentials:
+      via: [account]
+      security_scheme: api_token
+    lifecycle:
+      observe: zone.get
+      create: zone.create
+      update: zone.update
+      delete: zone.delete
+
+  dns_record:
+    api_version: cloudflare.example.io/v1alpha1
+    kind: DNSRecord
+    spec_schema:
+      pointer: "#/components/schemas/DNSRecord"
+    identifiers:
+      external_id:
+        type: field
+        path: status.id
+    references:
+      zone:
+        from: spec.zoneRef
+        target: zone
+    credentials:
+      via: [zone, account]
+      security_scheme: api_token
+    lifecycle:
+      observe: dns_record.get
+      create: dns_record.create
+      update: dns_record.update
+      delete: dns_record.delete
+
+operations:
+  account.get:
+    method: GET
+    path: /accounts/{account_id}
+    path_parameters:
+      account_id:
+        type: field
+        path: spec.id
+
+  zone.get:
+    method: GET
+    path: /zones/{zone_id}
+    path_parameters:
+      zone_id:
+        type: field
+        path: status.id
+
+  zone.create:
+    method: POST
+    path: /zones
+
+  zone.update:
+    method: PUT
+    path: /zones/{zone_id}
+    path_parameters:
+      zone_id:
+        type: field
+        path: status.id
+
+  zone.delete:
+    method: DELETE
+    path: /zones/{zone_id}
+    path_parameters:
+      zone_id:
+        type: field
+        path: status.id
+
+  dns_record.get:
+    method: GET
+    path: /zones/{zone_id}/dns_records/{record_id}
+    path_parameters:
+      zone_id:
+        type: related_identifier
+        via: [zone]
+        name: external_id
+      record_id:
+        type: field
+        path: status.id
+
+  dns_record.create:
+    method: POST
+    path: /zones/{zone_id}/dns_records
+    path_parameters:
+      zone_id:
+        type: related_identifier
+        via: [zone]
+        name: external_id
+
+  dns_record.update:
+    method: PUT
+    path: /zones/{zone_id}/dns_records/{record_id}
+    path_parameters:
+      zone_id:
+        type: related_identifier
+        via: [zone]
+        name: external_id
+      record_id:
+        type: field
+        path: status.id
+
+  dns_record.delete:
+    method: DELETE
+    path: /zones/{zone_id}/dns_records/{record_id}
+    path_parameters:
+      zone_id:
+        type: related_identifier
+        via: [zone]
+        name: external_id
+      record_id:
+        type: field
+        path: status.id

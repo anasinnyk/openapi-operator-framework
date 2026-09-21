@@ -1,0 +1,72 @@
+overlay: 1.1.0
+info:
+  title: Cloudflare Account
+  version: 0.0.1
+extends: ./cloudflare.yaml
+actions:
+  - target: $.components.schemas.iam_account
+    update:
+      x-kube-resource:
+        name: account
+        apiVersion: cloudflare.kube.nas1k.dev/v1alpha1
+        kind: Account
+        scope: Namespaced
+
+        identifiers:
+          external_id:
+            type: field
+            path: status.id
+
+        credentials:
+          security_scheme: api_token
+          source:
+            type: secret_key_selector
+            path: spec.apiToken.secretRef
+
+  - target: $.paths['/accounts/{account_id}'].get
+    update:
+      x-kube-operation:
+        resource: account
+        lifecycle: observe
+        path_parameters:
+          account_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/accounts'].post
+    update:
+      x-kube-operation:
+        resource: account
+        lifecycle: create
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/accounts/{account_id}'].put
+    update:
+      x-kube-operation:
+        resource: account
+        lifecycle: update
+        path_parameters:
+          account_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/accounts/{account_id}'].delete
+    update:
+      x-kube-operation:
+        resource: account
+        lifecycle: delete
+        path_parameters:
+          account_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id

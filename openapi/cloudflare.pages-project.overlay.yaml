@@ -1,0 +1,113 @@
+overlay: 1.1.0
+info:
+  title: Cloudflare Pages Project
+  version: 0.0.1
+extends: ./cloudflare.yaml
+actions:
+  - target: $.components.schemas.pages_project
+    update:
+      x-kube-resource:
+        name: pages_project
+        apiVersion: cloudflare.kube.nas1k.dev/v1alpha1
+        kind: PagesProject
+        scope: Namespaced
+
+        identifiers:
+          external_id:
+            type: field
+            path: status.id
+
+        references:
+          account:
+            from: spec.accountRef
+            target: account
+            namespace: same_as_resource
+
+        credentials:
+          security_scheme: api_token
+          source:
+            type: related
+            via: [account]
+
+  - target: $.paths['/accounts/{account_id}/pages/projects/{project_name}'].get
+    update:
+      x-kube-operation:
+        resource: pages_project
+        lifecycle: observe
+        path_parameters:
+          account_id:
+            type: related_identifier
+            via: [account]
+            name: external_id
+          project_name:
+            type: coalesce
+            values:
+              - type: field
+                path: status.id
+              - type: field
+                path: spec.resourceName
+              - type: field
+                path: metadata.name
+        result:
+          identifiers:
+            external_id: response.body.result.name
+
+  - target: $.paths['/accounts/{account_id}/pages/projects'].post
+    update:
+      x-kube-operation:
+        resource: pages_project
+        lifecycle: create
+        path_parameters:
+          account_id:
+            type: related_identifier
+            via: [account]
+            name: external_id
+        result:
+          identifiers:
+            external_id: response.body.result.name
+
+  - target: $.paths['/accounts/{account_id}/pages/projects/{project_name}'].patch
+    update:
+      x-kube-operation:
+        resource: pages_project
+        lifecycle: update
+        path_parameters:
+          account_id:
+            type: related_identifier
+            via: [account]
+            name: external_id
+          project_name:
+            type: coalesce
+            values:
+              - type: field
+                path: status.id
+              - type: field
+                path: spec.resourceName
+              - type: field
+                path: metadata.name
+        result:
+          identifiers:
+            external_id: response.body.result.name
+
+  - target: $.paths['/accounts/{account_id}/pages/projects/{project_name}'].delete
+    update:
+      x-kube-operation:
+        resource: pages_project
+        lifecycle: delete
+        path_parameters:
+          account_id:
+            type: related_identifier
+            via: [account]
+            name: external_id
+          project_name:
+            type: coalesce
+            values:
+              - type: field
+                path: status.id
+              - type: field
+                path: spec.resourceName
+              - type: field
+                path: metadata.name
+        result:
+          identifiers:
+            external_id: response.body.result.name

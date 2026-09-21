@@ -1,0 +1,92 @@
+overlay: 1.1.0
+info:
+  title: Cloudflare DNSRecord
+  version: 0.0.1
+extends: ./cloudflare.yaml
+actions:
+  - target: $.components.schemas['dns-records_dns-record-post']
+    update:
+      x-kube-resource:
+        name: dns_record
+        apiVersion: zones.cloudflare.kube.nas1k.dev/v1alpha1
+        kind: DNSRecord
+        scope: Namespaced
+
+        identifiers:
+          external_id:
+            type: field
+            path: status.id
+
+        references:
+          zone:
+            from: spec.zoneRef
+            target: zone
+            namespace: same_as_resource
+
+        credentials:
+          security_scheme: api_token
+          source:
+            type: related
+            via: [zone, account]
+
+  - target: $.paths['/zones/{zone_id}/dns_records/{dns_record_id}'].get
+    update:
+      x-kube-operation:
+        resource: dns_record
+        lifecycle: observe
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+          dns_record_id:
+            type: field
+            path: status.id
+
+  - target: $.paths['/zones/{zone_id}/dns_records'].post
+    update:
+      x-kube-operation:
+        resource: dns_record
+        lifecycle: create
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}/dns_records/{dns_record_id}'].patch
+    update:
+      x-kube-operation:
+        resource: dns_record
+        lifecycle: update
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+          dns_record_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}/dns_records/{dns_record_id}'].delete
+    update:
+      x-kube-operation:
+        resource: dns_record
+        lifecycle: delete
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+          dns_record_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id

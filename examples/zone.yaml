@@ -1,0 +1,11 @@
+apiVersion: cloudflare.cfrs.dev/v1alpha1
+kind: Zone
+metadata:
+  name: example-com
+  namespace: default
+spec:
+  name: example.com
+  accountRef:
+    name: nas1k
+  type: full
+  jumpStart: true

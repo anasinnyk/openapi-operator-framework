@@ -1,0 +1,16 @@
+apiVersion: cloudflare.cfrs.dev/v1alpha1
+kind: ZoneRuleset
+metadata:
+  name: example-waf-custom
+  namespace: default
+spec:
+  zoneRef:
+    name: example-com
+  name: example-waf-custom
+  kind: zone
+  phase: http_request_firewall_custom
+  rules:
+    - action: block
+      expression: ip.src in {192.0.2.0/24}
+      description: Block test network
+      enabled: true

@@ -1,0 +1,95 @@
+overlay: 1.1.0
+info:
+  title: Cloudflare Ruleset
+  version: 0.0.1
+extends: ./cloudflare.yaml
+actions:
+  - target: $.components.schemas.rulesets_Ruleset
+    update:
+      x-kube-resource:
+        name: zone_ruleset
+        apiVersion: rulesets.cloudflare.kube.nas1k.dev/v1alpha1
+        kind: Ruleset
+        scope: Namespaced
+
+        identifiers:
+          external_id:
+            type: field
+            path: status.id
+
+        references:
+          zone:
+            from: spec.zoneRef
+            target: zone
+            namespace: same_as_resource
+
+        credentials:
+          security_scheme: api_token
+          source:
+            type: related
+            via: [zone, account]
+
+  - target: $.paths['/zones/{zone_id}/rulesets/{ruleset_id}'].get
+    update:
+      x-kube-operation:
+        resource: zone_ruleset
+        lifecycle: observe
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+          ruleset_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}/rulesets'].post
+    update:
+      x-kube-operation:
+        resource: zone_ruleset
+        lifecycle: create
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}/rulesets/{ruleset_id}'].put
+    update:
+      x-kube-operation:
+        resource: zone_ruleset
+        lifecycle: update
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+          ruleset_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}/rulesets/{ruleset_id}'].delete
+    update:
+      x-kube-operation:
+        resource: zone_ruleset
+        lifecycle: delete
+        path_parameters:
+          zone_id:
+            type: related_identifier
+            via: [zone]
+            name: external_id
+          ruleset_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id

@@ -1,0 +1,78 @@
+overlay: 1.1.0
+info:
+  title: Cloudflare Zone
+  version: 0.0.1
+extends: ./cloudflare.yaml
+actions:
+  - target: $.components.schemas.zones_zone
+    update:
+      x-kube-resource:
+        name: zone
+        apiVersion: cloudflare.kube.nas1k.dev/v1alpha1
+        kind: Zone
+        scope: Namespaced
+
+        identifiers:
+          external_id:
+            type: field
+            path: status.id
+
+        references:
+          account:
+            from: spec.accountRef
+            target: account
+            namespace: same_as_resource
+
+        credentials:
+          security_scheme: api_token
+          source:
+            type: related
+            via: [account]
+
+  - target: $.paths['/zones/{zone_id}'].get
+    update:
+      x-kube-operation:
+        resource: zone
+        lifecycle: observe
+        path_parameters:
+          zone_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones'].post
+    update:
+      x-kube-operation:
+        resource: zone
+        lifecycle: create
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}'].patch
+    update:
+      x-kube-operation:
+        resource: zone
+        lifecycle: update
+        path_parameters:
+          zone_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id
+
+  - target: $.paths['/zones/{zone_id}'].delete
+    update:
+      x-kube-operation:
+        resource: zone
+        lifecycle: delete
+        path_parameters:
+          zone_id:
+            type: field
+            path: status.id
+        result:
+          identifiers:
+            external_id: response.body.result.id

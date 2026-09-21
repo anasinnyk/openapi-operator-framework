@@ -1,0 +1,13 @@
+apiVersion: cloudflare.cfrs.dev/v1alpha1
+kind: PagesProject
+metadata:
+  name: example-pages
+  namespace: default
+spec:
+  accountRef:
+    name: nas1k
+  name: example-pages
+  productionBranch: main
+  buildConfig:
+    build_command: npm run build
+    destination_dir: dist
