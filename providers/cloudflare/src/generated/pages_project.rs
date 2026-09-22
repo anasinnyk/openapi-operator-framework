@@ -27,6 +27,52 @@ pub struct PagesProjectStatus {
     serde::Deserialize,
     schemars::JsonSchema
 )]
+pub struct PagesBuildConfig {
+    ///Enable build caching for the project.
+    #[serde(rename = "build_caching", default, skip_serializing_if = "Option::is_none")]
+    pub build_caching: Option<bool>,
+    ///Command used to build project.
+    #[serde(rename = "build_command", default, skip_serializing_if = "Option::is_none")]
+    pub build_command: Option<String>,
+    ///Assets output directory of the build.
+    #[serde(
+        rename = "destination_dir",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub destination_dir: Option<String>,
+    ///Directory to run the command.
+    #[serde(rename = "root_dir", default, skip_serializing_if = "Option::is_none")]
+    pub root_dir: Option<String>,
+    ///The classifying tag for analytics.
+    #[serde(
+        rename = "web_analytics_tag",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub web_analytics_tag: Option<String>,
+    ///The auth token for analytics.
+    #[serde(
+        rename = "web_analytics_token",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub web_analytics_token: Option<String>,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
 pub struct PagesProjectSpecCanonicalDeploymentDeploymentTriggerMetadata {
     ///Where the trigger happened.
     #[serde(rename = "branch")]
@@ -60,6 +106,187 @@ pub struct PagesProjectSpecCanonicalDeploymentDeploymentTrigger {
     #[serde(rename = "metadata")]
     pub metadata: PagesProjectSpecCanonicalDeploymentDeploymentTriggerMetadata,
     ///What caused the deployment.
+    #[serde(rename = "type")]
+    pub r#type: String,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct PagesPlainTextEnvVar {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    ///Environment variable value.
+    #[serde(rename = "value")]
+    pub value: String,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct PagesSecretTextEnvVar {
+    #[serde(rename = "type")]
+    pub r#type: String,
+    ///Secret value.
+    #[serde(rename = "value")]
+    pub value: String,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+#[serde(untagged)]
+pub enum PagesEnvVarsAdditionalProperty {
+    Variant1(PagesPlainTextEnvVar),
+    Variant2(PagesSecretTextEnvVar),
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct PagesEnvVars {
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<
+        String,
+        PagesEnvVarsAdditionalProperty,
+    >,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct PagesStage {
+    ///When the stage ended.
+    #[serde(rename = "ended_on", default, skip_serializing_if = "Option::is_none")]
+    pub ended_on: Option<String>,
+    ///The current build stage.
+    #[serde(rename = "name")]
+    pub name: String,
+    ///When the stage started.
+    #[serde(rename = "started_on", default, skip_serializing_if = "Option::is_none")]
+    pub started_on: Option<String>,
+    ///State of the current stage.
+    #[serde(rename = "status")]
+    pub status: String,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
+}
+pub type PagesProjectName = String;
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct PagesSourceConfig {
+    /**Whether to enable automatic deployments when pushing to the source repository.
+When disabled, no deployments (production or preview) will be triggered automatically.
+*/
+    #[serde(rename = "deployments_enabled")]
+    pub deployments_enabled: bool,
+    ///The owner of the repository.
+    #[serde(rename = "owner")]
+    pub owner: String,
+    ///The owner ID of the repository.
+    #[serde(rename = "owner_id")]
+    pub owner_id: String,
+    ///A list of paths that should be excluded from triggering a preview deployment. Wildcard syntax (`*`) is supported.
+    #[serde(rename = "path_excludes")]
+    pub path_excludes: Vec<String>,
+    ///A list of paths that should be watched to trigger a preview deployment. Wildcard syntax (`*`) is supported.
+    #[serde(rename = "path_includes")]
+    pub path_includes: Vec<String>,
+    ///Whether to enable PR comments.
+    #[serde(rename = "pr_comments_enabled")]
+    pub pr_comments_enabled: bool,
+    ///A list of branches that should not trigger a preview deployment. Wildcard syntax (`*`) is supported. Must be used with `preview_deployment_setting` set to `custom`.
+    #[serde(rename = "preview_branch_excludes")]
+    pub preview_branch_excludes: Vec<String>,
+    ///A list of branches that should trigger a preview deployment. Wildcard syntax (`*`) is supported. Must be used with `preview_deployment_setting` set to `custom`.
+    #[serde(rename = "preview_branch_includes")]
+    pub preview_branch_includes: Vec<String>,
+    ///Controls whether commits to preview branches trigger a preview deployment.
+    #[serde(rename = "preview_deployment_setting")]
+    pub preview_deployment_setting: String,
+    ///The production branch of the repository.
+    #[serde(rename = "production_branch")]
+    pub production_branch: String,
+    ///Whether to trigger a production deployment on commits to the production branch.
+    #[serde(rename = "production_deployments_enabled")]
+    pub production_deployments_enabled: bool,
+    ///The ID of the repository.
+    #[serde(rename = "repo_id")]
+    pub repo_id: String,
+    ///The name of the repository.
+    #[serde(rename = "repo_name")]
+    pub repo_name: String,
+    #[serde(
+        flatten,
+        default,
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
+    pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct PagesSource {
+    #[serde(rename = "config")]
+    pub config: PagesSourceConfig,
+    ///The source control management provider.
     #[serde(rename = "type")]
     pub r#type: String,
     #[serde(

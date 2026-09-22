@@ -1,11 +1,5 @@
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct AccountStatus {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
@@ -19,17 +13,15 @@ pub struct AccountStatus {
     #[serde(default)]
     pub conditions: Vec<k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+pub type IamCommonComponentsSchemasIdentifier = String;
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct AccountSpecManagedBy {
     ///ID of the parent Organization, if one exists
-    #[serde(rename = "parent_org_id", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "parent_org_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub parent_org_id: Option<String>,
     ///Name of the parent Organization, if one exists
     #[serde(
@@ -45,14 +37,7 @@ pub struct AccountSpecManagedBy {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct AccountSpecSettings {
     ///Sets an abuse contact email to notify for abuse reports.
     #[serde(
@@ -62,7 +47,7 @@ pub struct AccountSpecSettings {
     )]
     pub abuse_contact_email: Option<String>,
     /**Indicates whether membership in this account requires that
-Two-Factor Authentication is enabled*/
+    Two-Factor Authentication is enabled*/
     #[serde(
         rename = "enforce_twofactor",
         default,
@@ -76,6 +61,7 @@ Two-Factor Authentication is enabled*/
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
+pub type IamAccountType = serde_json::Value;
 #[derive(
     kube::CustomResource,
     Clone,
@@ -83,7 +69,7 @@ Two-Factor Authentication is enabled*/
     PartialEq,
     serde::Serialize,
     serde::Deserialize,
-    schemars::JsonSchema
+    schemars::JsonSchema,
 )]
 #[kube(
     group = "cloudflare.kube.nas1k.dev",
@@ -94,12 +80,20 @@ Two-Factor Authentication is enabled*/
 )]
 pub struct AccountSpec {
     ///Timestamp for the creation of the account
-    #[serde(rename = "created_on", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "created_on",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub created_on: Option<String>,
     #[serde(rename = "id")]
     pub id: IamCommonComponentsSchemasIdentifier,
     ///Parent container details
-    #[serde(rename = "managed_by", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "managed_by",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub managed_by: Option<AccountSpecManagedBy>,
     ///Account name
     #[serde(rename = "name")]

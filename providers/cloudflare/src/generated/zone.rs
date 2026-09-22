@@ -89,6 +89,7 @@ pub struct ZoneSpecMeta {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
+pub type ZonesIdentifier = String;
 #[derive(
     Clone,
     Debug,
@@ -113,6 +114,7 @@ pub struct ZoneSpecOwner {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
+pub type ZonesPaused = bool;
 #[derive(
     Clone,
     Debug,
@@ -205,6 +207,7 @@ pub struct ZoneSpecTenantUnit {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
+pub type ZonesType = String;
 #[derive(
     kube::CustomResource,
     Clone,

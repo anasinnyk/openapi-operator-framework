@@ -16,4 +16,7 @@ pub enum GeneratorError {
 
     #[error("invalid Kubernetes apiVersion: {0}")]
     InvalidApiVersion(String),
+
+    #[error("cyclic schema reference is not supported yet: {0}")]
+    CyclicSchema(String),
 }

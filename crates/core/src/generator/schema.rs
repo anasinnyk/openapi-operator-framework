@@ -27,6 +27,7 @@ pub struct SchemaCodegen<'a> {
     schemas: &'a BTreeMap<SchemaName, SchemaIr>,
     declarations: Vec<TokenStream>,
     generated: BTreeSet<String>,
+    generating: BTreeSet<String>,
 }
 
 impl<'a> SchemaCodegen<'a> {
@@ -35,6 +36,7 @@ impl<'a> SchemaCodegen<'a> {
             schemas,
             declarations: Vec::new(),
             generated: BTreeSet::new(),
+            generating: BTreeSet::new(),
         }
     }
 }
@@ -47,7 +49,7 @@ impl SchemaCodegen<'_> {
     ) -> Result<TokenStream, GeneratorError> {
         match schema {
             SchemaIr::Ref { target } => {
-                let ident = type_ident(&target.0)?;
+                let ident = self.ensure_schema_generated(target)?;
                 Ok(quote!(#ident))
             }
 
@@ -198,6 +200,69 @@ impl SchemaCodegen<'_> {
 
             _ => Ok(ScalarMatch::NonScalar),
         }
+    }
+
+    fn ensure_schema_generated(
+        &mut self,
+        target: &SchemaName,
+    ) -> Result<proc_macro2::Ident, GeneratorError> {
+        let ident = type_ident(&target.0)?;
+        let key = ident.to_string();
+
+        if self.generated.contains(&key) {
+            return Ok(ident);
+        }
+
+        if !self.generating.insert(key.clone()) {
+            return Err(GeneratorError::CyclicSchema(target.0.clone()));
+        }
+
+        // Clone потрібен, бо нижче ми mutable borrow self.
+        let schema = self
+            .schemas
+            .get(target)
+            .cloned()
+            .ok_or_else(|| GeneratorError::UnknownSchema(target.0.clone()))?;
+
+        let result = self.generate_named_schema(&ident, &target.0, &schema);
+
+        self.generating.remove(&key);
+
+        result?;
+
+        Ok(ident)
+    }
+
+    fn generate_named_schema(
+        &mut self,
+        ident: &proc_macro2::Ident,
+        name: &str,
+        schema: &SchemaIr,
+    ) -> Result<(), GeneratorError> {
+        let key = ident.to_string();
+
+        let rust_type = match schema {
+            SchemaIr::Object {
+                properties,
+                additional_properties,
+            } => self.generate_inline_object(name, properties, additional_properties)?,
+
+            SchemaIr::OneOf { variants } => self.generate_one_of(name, variants)?,
+
+            SchemaIr::AllOf { variants } => self.generate_all_of(name, variants)?,
+
+            schema => self.rust_type(schema, name)?,
+        };
+
+        if !self.generated.contains(&key) {
+            self.declarations.push(quote! {
+                pub type #ident = #rust_type;
+            });
+
+            self.generated.insert(key);
+        }
+
+        Ok(())
     }
 
     fn generate_all_of(
