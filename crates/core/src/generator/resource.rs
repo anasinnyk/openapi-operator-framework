@@ -8,7 +8,7 @@ use crate::{
 };
 use proc_macro2::TokenStream;
 use quote::quote;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 pub struct GeneratedFile {
@@ -23,7 +23,7 @@ pub fn generate_resource(
 ) -> Result<GeneratedFile, GeneratorError> {
     let spec = generate_spec(ir, resource)?;
     let status = generate_status(resource)?;
-    let custom_resource = generate_custom_resource(spec, status);
+    let custom_resource = generate_custom_resource(&spec, &status);
 
     let content = format_tokens(custom_resource)?;
 
@@ -47,9 +47,6 @@ pub fn generate_spec(
         .get(&resource.spec_schema)
         .ok_or_else(|| GeneratorError::UnknownSchema(resource.spec_schema.0.clone()))?;
 
-    let spec_name = format!("{}Spec", resource.kind);
-    let spec_ident = type_ident(&spec_name)?;
-
     let (group, version) = resource
         .api_version
         .split_once('/')
@@ -61,12 +58,36 @@ pub fn generate_spec(
     let mut codegen = SchemaCodegen::new(&ir.schemas);
 
     let properties = codegen.object_properties(schema)?;
-    let fields = codegen.generate_fields(&spec_name, &properties)?;
+    let for_provider_name = format!("{}ForProvider", resource.kind);
+
+    let for_provider_ident = type_ident(&for_provider_name)?;
+
+    let spec_ident = type_ident(&format!("{}Spec", resource.kind))?;
+
+    let managed_properties = properties
+        .iter()
+        .filter(|(_, field)| !field.read_only && !field.ignored)
+        .map(|(name, field)| (name.clone(), field.clone()))
+        .collect::<BTreeMap<_, _>>();
+
+    let fields = codegen.generate_fields(&for_provider_name, &managed_properties)?;
 
     let declarations = codegen.finish();
 
     Ok(quote! {
         #(#declarations)*
+
+        #[derive(
+            Clone,
+            Debug,
+            PartialEq,
+            serde::Serialize,
+            serde::Deserialize,
+            schemars::JsonSchema
+        )]
+        pub struct #for_provider_ident {
+            #(#fields)*
+        }
 
         #[derive(
             kube::CustomResource,
@@ -85,13 +106,19 @@ pub fn generate_spec(
             status = #status_name
         )]
         pub struct #spec_ident {
-            #(#fields)*
+            #[serde(rename = "forProvider")]
+            pub for_provider: #for_provider_ident,
+
+            #[serde(flatten)]
+            pub management:
+                core::managed::ManagedResourceSpec,
         }
     })
 }
 
 pub fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
     let status_ident = type_ident(&format!("{}Status", resource.kind))?;
+    let at_provider_ident = type_ident(&format!("{}AtProvider", resource.kind))?;
 
     let mut identifier_fields = BTreeSet::new();
 
@@ -102,9 +129,9 @@ pub fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorEr
             ));
         };
 
-        let name = path.0.strip_prefix("status.").ok_or_else(|| {
+        let name = path.0.strip_prefix("status.atProvider.").ok_or_else(|| {
             GeneratorError::UnsupportedSchema(format!(
-                "identifier path must start with status.: {}",
+                "identifier path must start with status.atProvider.: {}",
                 path.0
             ))
         })?;
@@ -145,8 +172,26 @@ pub fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorEr
             serde::Deserialize,
             schemars::JsonSchema
         )]
-        pub struct #status_ident {
+        pub struct #at_provider_ident {
             #(#identifier_fields)*
+        }
+
+        #[derive(
+            Clone,
+            Debug,
+            Default,
+            PartialEq,
+            serde::Serialize,
+            serde::Deserialize,
+            schemars::JsonSchema
+        )]
+        pub struct #status_ident {
+            #[serde(
+                rename = "atProvider",
+                default,
+                skip_serializing_if = "Option::is_none"
+            )]
+            pub at_provider: Option<#at_provider_ident>,
 
             #[serde(
                 rename = "observedGeneration",
@@ -163,7 +208,7 @@ pub fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorEr
     })
 }
 
-fn generate_custom_resource(spec: TokenStream, status: TokenStream) -> TokenStream {
+fn generate_custom_resource(spec: &TokenStream, status: &TokenStream) -> TokenStream {
     quote! {
         // This file is generated. Do not edit manually.
 

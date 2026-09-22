@@ -7,9 +7,22 @@
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneStatus {
+pub struct ZoneAtProvider {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+}
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct ZoneStatus {
+    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
+    pub at_provider: Option<ZoneAtProvider>,
     #[serde(
         rename = "observedGeneration",
         default,
@@ -27,7 +40,7 @@ pub struct ZoneStatus {
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneSpecAccount {
+pub struct ZoneForProviderAccount {
     ///Identifier
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -49,7 +62,7 @@ pub struct ZoneSpecAccount {
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneSpecMeta {
+pub struct ZoneForProviderMeta {
     ///The zone is only configured for CDN.
     #[serde(rename = "cdn_only", default, skip_serializing_if = "Option::is_none")]
     pub cdn_only: Option<bool>,
@@ -98,7 +111,7 @@ pub type ZonesIdentifier = String;
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneSpecOwner {
+pub struct ZoneForProviderOwner {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<ZonesIdentifier>,
     ///Name of the owner.
@@ -123,7 +136,7 @@ pub type ZonesPaused = bool;
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneSpecPlan {
+pub struct ZoneForProviderPlan {
     ///States if the subscription can be activated.
     #[serde(rename = "can_subscribe", default, skip_serializing_if = "Option::is_none")]
     pub can_subscribe: Option<bool>,
@@ -176,7 +189,7 @@ pub struct ZoneSpecPlan {
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneSpecTenant {
+pub struct ZoneForProviderTenant {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<ZonesIdentifier>,
     ///The name of the Tenant account.
@@ -197,7 +210,7 @@ pub struct ZoneSpecTenant {
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct ZoneSpecTenantUnit {
+pub struct ZoneForProviderTenantUnit {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<ZonesIdentifier>,
     #[serde(
@@ -208,6 +221,58 @@ pub struct ZoneSpecTenantUnit {
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
 pub type ZonesType = String;
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct ZoneForProvider {
+    ///The account the zone belongs to.
+    #[serde(rename = "account")]
+    pub account: ZoneForProviderAccount,
+    /**Allows the customer to use a custom apex.
+*Tenants Only Configuration*.*/
+    #[serde(rename = "cname_suffix", default, skip_serializing_if = "Option::is_none")]
+    pub cname_suffix: Option<String>,
+    ///Identifier
+    #[serde(rename = "id")]
+    pub id: String,
+    ///Metadata about the zone.
+    #[serde(rename = "meta")]
+    pub meta: ZoneForProviderMeta,
+    ///The domain name. Per [RFC 1035](https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.4) the overall zone name can be up to 253 characters, with each segment ("label") not exceeding 63 characters.
+    #[serde(rename = "name")]
+    pub name: String,
+    ///The owner of the zone.
+    #[serde(rename = "owner")]
+    pub owner: ZoneForProviderOwner,
+    #[serde(rename = "paused", default, skip_serializing_if = "Option::is_none")]
+    pub paused: Option<ZonesPaused>,
+    ///Legacy permissions based on legacy user membership information.
+    #[serde(rename = "permissions", default, skip_serializing_if = "Option::is_none")]
+    pub permissions: Option<Vec<String>>,
+    ///A Zones subscription information.
+    #[serde(rename = "plan")]
+    pub plan: ZoneForProviderPlan,
+    ///The root organizational unit that this zone belongs to (such as a tenant or organization).
+    #[serde(rename = "tenant", default, skip_serializing_if = "Option::is_none")]
+    pub tenant: Option<ZoneForProviderTenant>,
+    ///The immediate parent organizational unit that this zone belongs to (such as under a tenant or sub-organization).
+    #[serde(rename = "tenant_unit", default, skip_serializing_if = "Option::is_none")]
+    pub tenant_unit: Option<ZoneForProviderTenantUnit>,
+    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<ZonesType>,
+    ///An array of domains used for custom name servers. This is only available for Business and Enterprise plans.
+    #[serde(
+        rename = "vanity_name_servers",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub vanity_name_servers: Option<Vec<String>>,
+}
 #[derive(
     kube::CustomResource,
     Clone,
@@ -225,95 +290,8 @@ pub type ZonesType = String;
     status = "ZoneStatus"
 )]
 pub struct ZoneSpec {
-    ///The account the zone belongs to.
-    #[serde(rename = "account")]
-    pub account: ZoneSpecAccount,
-    /**The last time proof of ownership was detected and the zone was made
-active.*/
-    #[serde(rename = "activated_on", default, skip_serializing_if = "Option::is_none")]
-    pub activated_on: Option<String>,
-    /**Allows the customer to use a custom apex.
-*Tenants Only Configuration*.*/
-    #[serde(rename = "cname_suffix", default, skip_serializing_if = "Option::is_none")]
-    pub cname_suffix: Option<String>,
-    ///When the zone was created.
-    #[serde(rename = "created_on")]
-    pub created_on: String,
-    /**The interval (in seconds) from when development mode expires
-(positive integer) or last expired (negative integer) for the
-domain. If development mode has never been enabled, this value is 0.*/
-    #[serde(rename = "development_mode")]
-    pub development_mode: f64,
-    ///Identifier
-    #[serde(rename = "id")]
-    pub id: String,
-    ///Metadata about the zone.
-    #[serde(rename = "meta")]
-    pub meta: ZoneSpecMeta,
-    ///When the zone was last modified.
-    #[serde(rename = "modified_on")]
-    pub modified_on: String,
-    ///The domain name. Per [RFC 1035](https://datatracker.ietf.org/doc/html/rfc1035#section-2.3.4) the overall zone name can be up to 253 characters, with each segment ("label") not exceeding 63 characters.
-    #[serde(rename = "name")]
-    pub name: String,
-    ///The name servers Cloudflare assigns to a zone.
-    #[serde(rename = "name_servers")]
-    pub name_servers: Vec<String>,
-    ///DNS host at the time of switching to Cloudflare.
-    #[serde(
-        rename = "original_dnshost",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub original_dnshost: Option<String>,
-    ///Original name servers before moving to Cloudflare.
-    #[serde(
-        rename = "original_name_servers",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub original_name_servers: Option<Vec<String>>,
-    ///Registrar for the domain at the time of switching to Cloudflare.
-    #[serde(
-        rename = "original_registrar",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub original_registrar: Option<String>,
-    ///The owner of the zone.
-    #[serde(rename = "owner")]
-    pub owner: ZoneSpecOwner,
-    #[serde(rename = "paused", default, skip_serializing_if = "Option::is_none")]
-    pub paused: Option<ZonesPaused>,
-    ///Legacy permissions based on legacy user membership information.
-    #[serde(rename = "permissions", default, skip_serializing_if = "Option::is_none")]
-    pub permissions: Option<Vec<String>>,
-    ///A Zones subscription information.
-    #[serde(rename = "plan")]
-    pub plan: ZoneSpecPlan,
-    ///The zone status on Cloudflare.
-    #[serde(rename = "status", default, skip_serializing_if = "Option::is_none")]
-    pub status: Option<String>,
-    ///The root organizational unit that this zone belongs to (such as a tenant or organization).
-    #[serde(rename = "tenant", default, skip_serializing_if = "Option::is_none")]
-    pub tenant: Option<ZoneSpecTenant>,
-    ///The immediate parent organizational unit that this zone belongs to (such as under a tenant or sub-organization).
-    #[serde(rename = "tenant_unit", default, skip_serializing_if = "Option::is_none")]
-    pub tenant_unit: Option<ZoneSpecTenantUnit>,
-    #[serde(rename = "type", default, skip_serializing_if = "Option::is_none")]
-    pub r#type: Option<ZonesType>,
-    ///An array of domains used for custom name servers. This is only available for Business and Enterprise plans.
-    #[serde(
-        rename = "vanity_name_servers",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub vanity_name_servers: Option<Vec<String>>,
-    ///Verification key for partial zone setup.
-    #[serde(
-        rename = "verification_key",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub verification_key: Option<String>,
+    #[serde(rename = "forProvider")]
+    pub for_provider: ZoneForProvider,
+    #[serde(flatten)]
+    pub management: provider_core::managed::ManagedResourceSpec,
 }

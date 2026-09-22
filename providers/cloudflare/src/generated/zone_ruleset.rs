@@ -7,9 +7,22 @@
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct RulesetStatus {
+pub struct RulesetAtProvider {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
+}
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct RulesetStatus {
+    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
+    pub at_provider: Option<RulesetAtProvider>,
     #[serde(
         rename = "observedGeneration",
         default,
@@ -18,6 +31,26 @@ pub struct RulesetStatus {
     pub observed_generation: Option<i64>,
     #[serde(default)]
     pub conditions: Vec<k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition>,
+}
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct RulesetForProvider {
+    ///An informative description of the ruleset.
+    #[serde(rename = "description", default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(rename = "id")]
+    pub id: String,
+    ///The human-readable name of the ruleset.
+    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(rename = "version")]
+    pub version: String,
 }
 #[derive(
     kube::CustomResource,
@@ -36,17 +69,8 @@ pub struct RulesetStatus {
     status = "RulesetStatus"
 )]
 pub struct RulesetSpec {
-    ///An informative description of the ruleset.
-    #[serde(rename = "description", default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(rename = "id")]
-    pub id: String,
-    ///The timestamp of when the ruleset was last modified.
-    #[serde(rename = "last_updated")]
-    pub last_updated: String,
-    ///The human-readable name of the ruleset.
-    #[serde(rename = "name", default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(rename = "version")]
-    pub version: String,
+    #[serde(rename = "forProvider")]
+    pub for_provider: RulesetForProvider,
+    #[serde(flatten)]
+    pub management: provider_core::managed::ManagedResourceSpec,
 }

@@ -384,6 +384,20 @@ fn extract_object(value: &Value, location: &str) -> Result<SchemaIr, LoaderError
                         .get("nullable")
                         .and_then(Value::as_bool)
                         .unwrap_or(false),
+                    read_only: property
+                        .get("readOnly")
+                        .and_then(Value::as_bool)
+                        .unwrap_or(false),
+
+                    write_only: property
+                        .get("writeOnly")
+                        .and_then(Value::as_bool)
+                        .unwrap_or(false),
+
+                    ignored: property
+                        .pointer("/x-kube-field/ignored")
+                        .and_then(Value::as_bool)
+                        .unwrap_or(false),
                     description: optional_string(property, "description"),
                     default: property.get("default").cloned(),
                 },

@@ -170,6 +170,15 @@ pub struct FieldIr {
     #[serde(default)]
     pub nullable: bool,
 
+    #[serde(default)]
+    pub read_only: bool,
+
+    #[serde(default)]
+    pub write_only: bool,
+
+    #[serde(default)]
+    pub ignored: bool,
+
     pub description: Option<String>,
     pub default: Option<Value>,
 }

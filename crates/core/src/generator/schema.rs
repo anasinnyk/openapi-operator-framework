@@ -49,6 +49,13 @@ impl SchemaCodegen<'_> {
     ) -> Result<TokenStream, GeneratorError> {
         match schema {
             SchemaIr::Ref { target } => {
+                let ident = type_ident(&target.0)?;
+                let key = ident.to_string();
+
+                if self.generating.contains(&key) {
+                    return Ok(quote!(Box<#ident>));
+                }
+
                 let ident = self.ensure_schema_generated(target)?;
                 Ok(quote!(#ident))
             }

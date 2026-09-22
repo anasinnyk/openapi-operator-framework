@@ -641,10 +641,13 @@ dependencies = [
  "clap",
  "enumset",
  "heck",
+ "k8s-openapi",
+ "kube",
  "prettyplease",
  "proc-macro2",
  "quote",
  "roas-overlay",
+ "schemars",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -1688,6 +1691,7 @@ checksum = "d9c6922f6afe80418dd6019818af5d0d34584c371780ff09b9752370c25b4abb"
 dependencies = [
  "base64 0.22.1",
  "jiff",
+ "schemars",
  "serde",
  "serde_json",
 ]
