@@ -15,11 +15,11 @@ actions:
         identifiers:
           external_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
 
         references:
           account:
-            from: spec.accountRef
+            from: spec.forProvider.accountRef
             target: account
             namespace: same_as_resource
 
@@ -43,7 +43,7 @@ actions:
             type: coalesce
             values:
               - type: field
-                path: status.id
+                path: status.atProvider.id
               - type: field
                 path: spec.resourceName
               - type: field
@@ -80,7 +80,7 @@ actions:
             type: coalesce
             values:
               - type: field
-                path: status.id
+                path: status.atProvider.id
               - type: field
                 path: spec.resourceName
               - type: field
@@ -103,7 +103,7 @@ actions:
             type: coalesce
             values:
               - type: field
-                path: status.id
+                path: status.atProvider.id
               - type: field
                 path: spec.resourceName
               - type: field

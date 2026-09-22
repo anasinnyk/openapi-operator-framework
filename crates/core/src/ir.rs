@@ -19,6 +19,18 @@ pub struct ResourceName(pub String);
 #[serde(transparent)]
 pub struct OperationId(pub String);
 
+impl OperationId {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl AsRef<str> for OperationId {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ResourceIr {
     pub api_version: String,
@@ -47,14 +59,14 @@ pub struct ReferenceIr {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CredentialsIr {
-    pub source: CredentialsSourceIr,
+    pub source: CredentialSourceIr,
 
     pub security_scheme: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
-pub enum CredentialsSourceIr {
+pub enum CredentialSourceIr {
     SecretKeySelector { path: FieldPath },
     Related { via: Vec<String> },
 }
@@ -73,8 +85,12 @@ pub struct OperationIr {
     pub path: String,
     #[serde(default)]
     pub path_parameters: BTreeMap<String, ValueExpr>,
+
     pub request_schema: Option<SchemaRef>,
     pub response_schema: Option<SchemaRef>,
+
+    pub request_body: Option<SchemaIr>,
+    pub response_body: Option<SchemaIr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -107,6 +123,24 @@ pub enum HttpMethod {
     PUT,
     PATCH,
     DELETE,
+}
+
+impl HttpMethod {
+    pub fn as_str(&self) -> &str {
+        match self {
+            HttpMethod::GET => "get",
+            HttpMethod::POST => "post",
+            HttpMethod::PUT => "put",
+            HttpMethod::PATCH => "patch",
+            HttpMethod::DELETE => "delete",
+        }
+    }
+}
+
+impl AsRef<str> for HttpMethod {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -217,7 +251,7 @@ mod test {
         assert_eq!(dns_record.references["zone"].target.0, "zone");
         assert_eq!(
             dns_record.credentials.as_ref().unwrap().source,
-            CredentialsSourceIr::Related {
+            CredentialSourceIr::Related {
                 via: vec!["zone".to_string(), "account".to_string()]
             }
         );

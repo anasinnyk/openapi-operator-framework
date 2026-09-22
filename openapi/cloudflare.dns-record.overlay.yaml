@@ -15,11 +15,11 @@ actions:
         identifiers:
           external_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
 
         references:
           zone:
-            from: spec.zoneRef
+            from: spec.forProvider.zoneRef
             target: zone
             namespace: same_as_resource
 
@@ -41,7 +41,7 @@ actions:
             name: external_id
           dns_record_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
 
   - target: $.paths['/zones/{zone_id}/dns_records'].post
     update:
@@ -69,7 +69,7 @@ actions:
             name: external_id
           dns_record_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
         result:
           identifiers:
             external_id: response.body.result.id
@@ -86,7 +86,7 @@ actions:
             name: external_id
           dns_record_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
         result:
           identifiers:
             external_id: response.body.result.id

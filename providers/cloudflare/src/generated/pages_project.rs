@@ -1754,6 +1754,8 @@ pub struct PagesProjectForProvider {
     pub production_branch: String,
     #[serde(rename = "source", default, skip_serializing_if = "Option::is_none")]
     pub source: Option<PagesSource>,
+    #[serde(rename = "accountRef")]
+    pub account_ref: core::reference::ResourceReference,
 }
 #[derive(
     kube::CustomResource,
@@ -1775,5 +1777,5 @@ pub struct PagesProjectSpec {
     #[serde(rename = "forProvider")]
     pub for_provider: PagesProjectForProvider,
     #[serde(flatten)]
-    pub management: provider_core::managed::ManagedResourceSpec,
+    pub management: core::managed::ManagedResourceSpec,
 }

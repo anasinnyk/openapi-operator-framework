@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ir::{
-    CredentialsSourceIr, OperationId, OperationIr, ProviderIr, ResourceIr, ResourceName, ValueExpr,
+    CredentialSourceIr, OperationId, OperationIr, ProviderIr, ResourceIr, ResourceName, ValueExpr,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -83,7 +83,7 @@ fn validate_credentials(
     };
 
     match &credentials.source {
-        CredentialsSourceIr::SecretKeySelector { path } => {
+        CredentialSourceIr::SecretKeySelector { path } => {
             if path.0.is_empty() {
                 errors.push(ValidationError {
                     location: format!("resources.{}.credentials", name.0),
@@ -91,10 +91,10 @@ fn validate_credentials(
                 });
             }
         }
-        CredentialsSourceIr::Related { via } => match resolve_relation(ir, name, via) {
+        CredentialSourceIr::Related { via } => match resolve_relation(ir, name, via) {
             Ok(target) => {
                 let has_direct_credentials = target.credentials.as_ref().is_some_and(|creds| {
-                    matches!(creds.source, CredentialsSourceIr::SecretKeySelector { .. })
+                    matches!(creds.source, CredentialSourceIr::SecretKeySelector { .. })
                 });
 
                 if !has_direct_credentials {

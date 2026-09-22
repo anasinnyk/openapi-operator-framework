@@ -51,6 +51,8 @@ pub struct RulesetForProvider {
     pub name: Option<String>,
     #[serde(rename = "version")]
     pub version: String,
+    #[serde(rename = "zoneRef")]
+    pub zone_ref: core::reference::ResourceReference,
 }
 #[derive(
     kube::CustomResource,
@@ -72,5 +74,5 @@ pub struct RulesetSpec {
     #[serde(rename = "forProvider")]
     pub for_provider: RulesetForProvider,
     #[serde(flatten)]
-    pub management: provider_core::managed::ManagedResourceSpec,
+    pub management: core::managed::ManagedResourceSpec,
 }

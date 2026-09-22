@@ -6,8 +6,13 @@ mod resource;
 mod schema;
 
 pub fn generate(ir: &ProviderIr) -> Result<Vec<resource::GeneratedFile>, errors::GeneratorError> {
-    ir.resources
+    let mut files = ir
+        .resources
         .iter()
         .map(|(name, res)| resource::generate_resource(ir, name, res))
-        .collect()
+        .collect::<Result<Vec<_>, _>>()?;
+
+    files.push(resource::generate_client_file(ir)?);
+
+    Ok(files)
 }

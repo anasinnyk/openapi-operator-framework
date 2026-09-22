@@ -3,8 +3,9 @@ use crate::{
         errors::GeneratorError,
         naming::{field_ident, type_ident},
     },
-    ir::{AdditionalPropertiesIr, FieldIr, SchemaIr, SchemaName},
+    ir::{AdditionalPropertiesIr, FieldIr, OperationIr, ProviderIr, SchemaIr, SchemaName},
 };
+use heck::{ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::collections::{BTreeMap, BTreeSet};
@@ -21,6 +22,11 @@ enum ScalarMatch {
     Any,
     Scalar(ScalarKind),
     NonScalar,
+}
+
+pub struct OperationTypes {
+    pub request: Option<TokenStream>,
+    pub response: Option<TokenStream>,
 }
 
 pub struct SchemaCodegen<'a> {
@@ -93,6 +99,89 @@ impl SchemaCodegen<'_> {
 
             SchemaIr::AllOf { variants } => self.generate_all_of(name_hint, variants),
         }
+    }
+
+    fn one_of_choices(
+        &self,
+        schema: &SchemaIr,
+        visited: &mut BTreeSet<SchemaName>,
+    ) -> Option<Vec<SchemaIr>> {
+        match schema {
+            SchemaIr::OneOf { variants } => Some(variants.clone()),
+
+            SchemaIr::Ref { target } => {
+                if !visited.insert(target.clone()) {
+                    return None;
+                }
+
+                let result = self
+                    .schemas
+                    .get(target)
+                    .and_then(|schema| self.one_of_choices(schema, visited));
+
+                visited.remove(target);
+                result
+            }
+
+            _ => None,
+        }
+    }
+
+    fn distribute_all_of(&self, variants: &[SchemaIr]) -> Option<SchemaIr> {
+        let mut found_one_of = false;
+        let mut combinations = vec![Vec::new()];
+
+        for variant in variants {
+            let choices = self.one_of_choices(variant, &mut BTreeSet::new());
+
+            if let Some(choices) = choices {
+                found_one_of = true;
+
+                combinations = combinations
+                    .into_iter()
+                    .flat_map(|combination| {
+                        choices.iter().map(move |choice| {
+                            let mut result = combination.clone();
+                            result.push(choice.clone());
+                            result
+                        })
+                    })
+                    .collect();
+            } else {
+                for combination in &mut combinations {
+                    combination.push(variant.clone());
+                }
+            }
+        }
+
+        found_one_of.then(|| SchemaIr::OneOf {
+            variants: combinations
+                .into_iter()
+                .map(|variants| SchemaIr::AllOf { variants })
+                .collect(),
+        })
+    }
+
+    pub fn generate_operation_types(
+        &mut self,
+        operation_id: &str,
+        operation: &OperationIr,
+    ) -> Result<OperationTypes, GeneratorError> {
+        let operation_name = operation_id.to_upper_camel_case();
+
+        let request = operation
+            .request_body
+            .as_ref()
+            .map(|schema| self.rust_type(schema, &format!("{operation_name}Request")))
+            .transpose()?;
+
+        let response = operation
+            .response_body
+            .as_ref()
+            .map(|schema| self.rust_type(schema, &format!("{operation_name}Response")))
+            .transpose()?;
+
+        Ok(OperationTypes { request, response })
     }
 
     fn generate_one_of(
@@ -277,6 +366,9 @@ impl SchemaCodegen<'_> {
         name_hint: &str,
         variants: &[SchemaIr],
     ) -> Result<TokenStream, GeneratorError> {
+        if let Some(distributed) = self.distribute_all_of(variants) {
+            return self.rust_type(&distributed, name_hint);
+        }
         let mut scalar_kind = None;
         let mut scalar_only = true;
 
@@ -490,6 +582,16 @@ impl SchemaCodegen<'_> {
     }
 }
 
+fn is_unconstrained_object(schema: &SchemaIr) -> bool {
+    matches!(
+        schema,
+        SchemaIr::Object {
+            properties,
+            additional_properties: AdditionalPropertiesIr::Any,
+        } if properties.is_empty()
+    )
+}
+
 fn merge_field(
     output: &mut BTreeMap<String, FieldIr>,
     name: &str,
@@ -500,9 +602,14 @@ fn merge_field(
         return Ok(());
     };
 
-    if existing.schema != field.schema {
+    if matches!(&existing.schema, SchemaIr::Any) || is_unconstrained_object(&existing.schema) {
+        existing.schema = field.schema.clone();
+    } else if matches!(&field.schema, SchemaIr::Any) || is_unconstrained_object(&field.schema) {
+    } else if existing.schema != field.schema {
         return Err(GeneratorError::UnsupportedSchema(format!(
-            "allOf contains incompatible definitions of field {name}"
+            "allOf contains incompatible definitions of field {name}: \
+         existing={:#?}, incoming={:#?}",
+            existing.schema, field.schema,
         )));
     }
 
@@ -518,4 +625,103 @@ fn merge_field(
     }
 
     Ok(())
+}
+
+pub fn generate_http_client(
+    ir: &ProviderIr,
+    schema_codegen: &mut SchemaCodegen<'_>,
+) -> Result<TokenStream, GeneratorError> {
+    let mut methods = Vec::new();
+
+    for (operation_id, operation) in &ir.operations {
+        let operation_id = operation_id.as_str();
+        let method_ident = field_ident(&operation_id.to_snake_case())?;
+
+        let operation_types = schema_codegen.generate_operation_types(operation_id, operation)?;
+
+        let response_type = operation_types.response.unwrap_or_else(|| quote!(()));
+
+        let path_parameters = operation
+            .path_parameters
+            .keys()
+            .map(|name| {
+                let ident = field_ident(name)?;
+                Ok((name, ident))
+            })
+            .collect::<Result<Vec<_>, GeneratorError>>()?;
+
+        let arguments = path_parameters
+            .iter()
+            .map(|(_, ident)| quote!(#ident: &str));
+
+        let replacements = path_parameters.iter().map(|(name, ident)| {
+            let placeholder = format!("{{{name}}}");
+
+            quote! {
+                path = path.replace(
+                    #placeholder,
+                    urlencoding::encode(#ident).as_ref(),
+                );
+            }
+        });
+
+        let (body_argument, apply_body) = match operation_types.request {
+            Some(request_type) => (
+                Some(quote!(body: &#request_type)),
+                quote!(request = request.json(body);),
+            ),
+            None => (None, quote!()),
+        };
+
+        let path = &operation.path;
+        let method = operation.method.as_str();
+
+        methods.push(quote! {
+            pub fn #method_ident(
+                &self,
+                #(#arguments,)*
+                #body_argument
+            ) -> core::ApiRequest<#response_type> {
+                let mut path = #path.to_owned();
+                #(#replacements)*
+
+                let url = format!(
+                    "{}{}",
+                    self.base_url.trim_end_matches('/'),
+                    path,
+                );
+
+                let method = reqwest::Method::from_bytes(
+                    #method.as_bytes()
+                ).expect("validated HTTP method");
+
+                let mut request = self.http.request(method, url);
+                #apply_body
+
+                core::ApiRequest::new(request)
+            }
+        });
+    }
+
+    Ok(quote! {
+        #[derive(Clone)]
+        pub struct ProviderClient {
+            http: reqwest::Client,
+            base_url: String,
+        }
+
+        impl ProviderClient {
+            pub fn new(
+                http: reqwest::Client,
+                base_url: impl Into<String>,
+            ) -> Self {
+                Self {
+                    http,
+                    base_url: base_url.into(),
+                }
+            }
+
+            #(#methods)*
+        }
+    })
 }

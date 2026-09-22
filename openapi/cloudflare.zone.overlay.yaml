@@ -15,11 +15,11 @@ actions:
         identifiers:
           external_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
 
         references:
           account:
-            from: spec.accountRef
+            from: spec.forProvider.accountRef
             target: account
             namespace: same_as_resource
 
@@ -37,7 +37,7 @@ actions:
         path_parameters:
           zone_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
         result:
           identifiers:
             external_id: response.body.result.id
@@ -59,7 +59,7 @@ actions:
         path_parameters:
           zone_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
         result:
           identifiers:
             external_id: response.body.result.id
@@ -72,7 +72,7 @@ actions:
         path_parameters:
           zone_id:
             type: field
-            path: status.id
+            path: status.atProvider.id
         result:
           identifiers:
             external_id: response.body.result.id

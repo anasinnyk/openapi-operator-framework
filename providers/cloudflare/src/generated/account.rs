@@ -113,6 +113,8 @@ pub struct AccountForProvider {
     pub settings: Option<AccountForProviderSettings>,
     #[serde(rename = "type")]
     pub r#type: IamAccountType,
+    #[serde(rename = "apiTokenSecretRef")]
+    pub api_token_secret_ref: core::reference::SecretReference,
 }
 #[derive(
     kube::CustomResource,
@@ -134,5 +136,5 @@ pub struct AccountSpec {
     #[serde(rename = "forProvider")]
     pub for_provider: AccountForProvider,
     #[serde(flatten)]
-    pub management: provider_core::managed::ManagedResourceSpec,
+    pub management: core::managed::ManagedResourceSpec,
 }

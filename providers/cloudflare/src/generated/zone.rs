@@ -272,6 +272,8 @@ pub struct ZoneForProvider {
         skip_serializing_if = "Option::is_none"
     )]
     pub vanity_name_servers: Option<Vec<String>>,
+    #[serde(rename = "accountRef")]
+    pub account_ref: core::reference::ResourceReference,
 }
 #[derive(
     kube::CustomResource,
@@ -293,5 +295,5 @@ pub struct ZoneSpec {
     #[serde(rename = "forProvider")]
     pub for_provider: ZoneForProvider,
     #[serde(flatten)]
-    pub management: provider_core::managed::ManagedResourceSpec,
+    pub management: core::managed::ManagedResourceSpec,
 }

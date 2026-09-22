@@ -40,7 +40,10 @@ pub struct DnsRecordStatus {
     serde::Deserialize,
     schemars::JsonSchema
 )]
-pub struct DnsRecordForProvider {}
+pub struct DnsRecordForProvider {
+    #[serde(rename = "zoneRef")]
+    pub zone_ref: core::reference::ResourceReference,
+}
 #[derive(
     kube::CustomResource,
     Clone,
@@ -61,5 +64,5 @@ pub struct DnsRecordSpec {
     #[serde(rename = "forProvider")]
     pub for_provider: DnsRecordForProvider,
     #[serde(flatten)]
-    pub management: provider_core::managed::ManagedResourceSpec,
+    pub management: core::managed::ManagedResourceSpec,
 }

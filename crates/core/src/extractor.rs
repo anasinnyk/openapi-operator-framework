@@ -164,14 +164,16 @@ fn extract_operations(
             let operation_id = method
                 .get("operationId")
                 .and_then(Value::as_str)
-                .map(str::to_owned)
-                .unwrap_or_else(|| {
-                    format!(
-                        "{}.{}",
-                        extension.resource.0,
-                        lifecycle_name(extension.lifecycle)
-                    )
-                });
+                .map_or_else(
+                    || {
+                        format!(
+                            "{}.{}",
+                            extension.resource.0,
+                            lifecycle_name(extension.lifecycle)
+                        )
+                    },
+                    str::to_owned,
+                );
             let operation_id = OperationId(operation_id);
 
             let resource = resources.get_mut(&extension.resource).ok_or_else(|| {
@@ -188,10 +190,14 @@ fn extract_operations(
                 &extension.resource,
             )?;
 
+            let location = format!("paths.{path}.{method_name}");
+
             let operation = OperationIr {
                 method: parse_method(method_name)?,
                 path: path.clone(),
                 path_parameters: extension.path_parameters,
+                request_body: extract_request_body(openapi, method, &location)?,
+                response_body: extract_response_body(openapi, method, &location)?,
                 request_schema: None,
                 response_schema: None,
             };
@@ -428,6 +434,145 @@ fn extract_object(value: &Value, location: &str) -> Result<SchemaIr, LoaderError
         properties,
         additional_properties,
     })
+}
+
+pub fn extract_request_body(
+    openapi: &Value,
+    operation: &Value,
+    location: &str,
+) -> Result<Option<SchemaIr>, LoaderError> {
+    let Some(request_body) = operation.get("requestBody") else {
+        return Ok(None);
+    };
+
+    let request_body =
+        resolve_local_reference(openapi, request_body, &format!("{location}.requestBody"))?;
+
+    let Some(schema) = json_content_schema(request_body, &format!("{location}.requestBody"))?
+    else {
+        return Ok(None);
+    };
+
+    Ok(Some(extract_schema(
+        schema,
+        &format!("{location}.requestBody.content.application/json.schema"),
+    )?))
+}
+
+pub fn extract_response_body(
+    openapi: &Value,
+    operation: &Value,
+    location: &str,
+) -> Result<Option<SchemaIr>, LoaderError> {
+    let responses = operation
+        .get("responses")
+        .and_then(Value::as_object)
+        .ok_or_else(|| ir_error(format!("{location}: missing responses")))?;
+
+    let mut successful = responses
+        .iter()
+        .filter_map(|(status, response)| {
+            let status = status.parse::<u16>().ok()?;
+
+            (200..300).contains(&status).then_some((status, response))
+        })
+        .collect::<Vec<_>>();
+
+    successful.sort_by_key(|(status, _)| *status);
+
+    // OpenAPI також дозволяє pattern response "2XX".
+    if successful.is_empty() {
+        if let Some(response) = responses.get("2XX") {
+            successful.push((200, response));
+        }
+    }
+
+    if successful.is_empty() {
+        return Err(ir_error(format!("{location}: no successful 2xx response")));
+    }
+
+    for (status, response) in successful {
+        let response =
+            resolve_local_reference(openapi, response, &format!("{location}.responses.{status}"))?;
+
+        let Some(schema) =
+            json_content_schema(response, &format!("{location}.responses.{status}"))?
+        else {
+            // Наприклад, 204 No Content.
+            continue;
+        };
+
+        return Ok(Some(extract_schema(
+            schema,
+            &format!(
+                "{location}.responses.{status}.\
+                 content.application/json.schema"
+            ),
+        )?));
+    }
+
+    Ok(None)
+}
+
+fn json_content_schema<'a>(
+    container: &'a Value,
+    location: &str,
+) -> Result<Option<&'a Value>, LoaderError> {
+    let Some(content) = container.get("content") else {
+        return Ok(None);
+    };
+
+    let content = content
+        .as_object()
+        .ok_or_else(|| ir_error(format!("{location}.content must be an object")))?;
+
+    let media_type = content
+        .get("application/json")
+        .or_else(|| content.get("application/*+json"))
+        .or_else(|| {
+            content
+                .iter()
+                .find(|(name, _)| name.ends_with("+json"))
+                .map(|(_, value)| value)
+        });
+
+    let Some(media_type) = media_type else {
+        return Err(ir_error(format!(
+            "{location}: JSON content type is missing"
+        )));
+    };
+
+    Ok(media_type.get("schema"))
+}
+
+fn resolve_local_reference<'a>(
+    openapi: &'a Value,
+    value: &'a Value,
+    location: &str,
+) -> Result<&'a Value, LoaderError> {
+    let mut current = value;
+    let mut visited = BTreeSet::new();
+
+    while let Some(reference) = current.get("$ref").and_then(Value::as_str) {
+        let pointer = reference.strip_prefix('#').ok_or_else(|| {
+            ir_error(format!(
+                "{location}: external reference is unsupported: \
+                 {reference}"
+            ))
+        })?;
+
+        if !visited.insert(reference.to_owned()) {
+            return Err(ir_error(format!(
+                "{location}: cyclic reference: {reference}"
+            )));
+        }
+
+        current = openapi
+            .pointer(pointer)
+            .ok_or_else(|| ir_error(format!("{location}: unresolved reference: {reference}")))?;
+    }
+
+    Ok(current)
 }
 
 fn extract_variants(value: &Value, location: &str) -> Result<Vec<SchemaIr>, LoaderError> {

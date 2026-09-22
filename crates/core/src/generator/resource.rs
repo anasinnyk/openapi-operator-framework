@@ -2,9 +2,9 @@ use crate::{
     generator::{
         errors::GeneratorError,
         naming::{field_ident, type_ident},
-        schema::SchemaCodegen,
+        schema::{SchemaCodegen, generate_http_client},
     },
-    ir::{ProviderIr, ResourceIr, ResourceName, ValueExpr},
+    ir::{CredentialSourceIr, FieldPath, ProviderIr, ResourceIr, ResourceName, ValueExpr},
 };
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -38,10 +38,7 @@ fn format_tokens(tokens: TokenStream) -> Result<String, GeneratorError> {
     Ok(prettyplease::unparse(&syntax))
 }
 
-pub fn generate_spec(
-    ir: &ProviderIr,
-    resource: &ResourceIr,
-) -> Result<TokenStream, GeneratorError> {
+fn generate_spec(ir: &ProviderIr, resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
     let schema = ir
         .schemas
         .get(&resource.spec_schema)
@@ -70,7 +67,12 @@ pub fn generate_spec(
         .map(|(name, field)| (name.clone(), field.clone()))
         .collect::<BTreeMap<_, _>>();
 
-    let fields = codegen.generate_fields(&for_provider_name, &managed_properties)?;
+    let mut fields = codegen.generate_fields(&for_provider_name, &managed_properties)?;
+    fields.extend(generate_reference_fields(resource)?);
+
+    if let Some(credentials) = generate_credential_field(resource)? {
+        fields.push(credentials);
+    }
 
     let declarations = codegen.finish();
 
@@ -116,7 +118,7 @@ pub fn generate_spec(
     })
 }
 
-pub fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
+fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
     let status_ident = type_ident(&format!("{}Status", resource.kind))?;
     let at_provider_ident = type_ident(&format!("{}AtProvider", resource.kind))?;
 
@@ -215,4 +217,76 @@ fn generate_custom_resource(spec: &TokenStream, status: &TokenStream) -> TokenSt
         #status
         #spec
     }
+}
+
+fn generate_reference_fields(resource: &ResourceIr) -> Result<Vec<TokenStream>, GeneratorError> {
+    resource
+        .references
+        .values()
+        .map(|reference| {
+            let json_name = for_provider_field(&reference.from)?;
+            let ident = field_ident(json_name)?;
+
+            Ok(quote! {
+                #[serde(rename = #json_name)]
+                pub #ident:
+                    core::reference::ResourceReference,
+            })
+        })
+        .collect()
+}
+
+fn generate_credential_field(resource: &ResourceIr) -> Result<Option<TokenStream>, GeneratorError> {
+    let Some(credentials) = &resource.credentials else {
+        return Ok(None);
+    };
+
+    let CredentialSourceIr::SecretKeySelector { path } = &credentials.source else {
+        return Ok(None);
+    };
+
+    let json_name = for_provider_field(path)?;
+    let ident = field_ident(json_name)?;
+
+    Ok(Some(quote! {
+        #[serde(rename = #json_name)]
+        pub #ident:
+            core::reference::SecretReference,
+    }))
+}
+
+fn for_provider_field(path: &FieldPath) -> Result<&str, GeneratorError> {
+    let field = path.0.strip_prefix("spec.forProvider.").ok_or_else(|| {
+        GeneratorError::UnsupportedSchema(format!(
+            "reference path must start with \
+                 spec.forProvider.: {}",
+            path.0
+        ))
+    })?;
+
+    if field.contains('.') {
+        return Err(GeneratorError::UnsupportedSchema(format!(
+            "nested reference paths are not supported: {}",
+            path.0
+        )));
+    }
+
+    Ok(field)
+}
+
+pub fn generate_client_file(ir: &ProviderIr) -> Result<GeneratedFile, GeneratorError> {
+    let mut schema_codegen = SchemaCodegen::new(&ir.schemas);
+
+    let client = generate_http_client(ir, &mut schema_codegen)?;
+    let declarations = schema_codegen.finish();
+
+    let content = quote! {
+        #(#declarations)*
+        #client
+    };
+
+    Ok(GeneratedFile {
+        path: "src/generated/client.rs".into(),
+        content: format_tokens(content)?,
+    })
 }
