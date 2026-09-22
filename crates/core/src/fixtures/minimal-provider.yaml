@@ -5,14 +5,15 @@ resources:
   account:
     api_version: cloudflare.example.io/v1alpha1
     kind: Account
-    spec_schema:
-      pointer: "#/components/schemas/Account"
+    spec_schema: Account
     identifiers:
       external_id:
         type: field
         path: spec.id
     credentials:
-      via: []
+      source:
+        type: related
+        via: []
       security_scheme: api_token
     lifecycle:
       observe: account.get
@@ -23,8 +24,7 @@ resources:
   zone:
     api_version: cloudflare.example.io/v1alpha1
     kind: Zone
-    spec_schema:
-      pointer: "#/components/schemas/Zone"
+    spec_schema: Zone
     identifiers:
       external_id:
         type: field
@@ -34,7 +34,9 @@ resources:
         from: spec.accountRef
         target: account
     credentials:
-      via: [account]
+      source:
+        type: related
+        via: [account]
       security_scheme: api_token
     lifecycle:
       observe: zone.get
@@ -45,8 +47,7 @@ resources:
   dns_record:
     api_version: cloudflare.example.io/v1alpha1
     kind: DNSRecord
-    spec_schema:
-      pointer: "#/components/schemas/DNSRecord"
+    spec_schema: DNSRecord
     identifiers:
       external_id:
         type: field
@@ -56,7 +57,9 @@ resources:
         from: spec.zoneRef
         target: zone
     credentials:
-      via: [zone, account]
+      source:
+        type: related
+        via: [zone, account]
       security_scheme: api_token
     lifecycle:
       observe: dns_record.get

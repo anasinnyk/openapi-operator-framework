@@ -207,8 +207,10 @@ mod test {
         assert_eq!(dns_record.kind, "DNSRecord");
         assert_eq!(dns_record.references["zone"].target.0, "zone");
         assert_eq!(
-            dns_record.credentials.as_ref().unwrap().via,
-            vec!["zone".to_string(), "account".to_string()]
+            dns_record.credentials.as_ref().unwrap().source,
+            CredentialsSourceIr::Related {
+                via: vec!["zone".to_string(), "account".to_string()]
+            }
         );
 
         let get = &ir.operations[&OperationId("dns_record.get".into())];

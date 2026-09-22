@@ -32,7 +32,7 @@ pub fn run() -> Result<()> {
         bail!("invalid ProviderIr:\n{errors:#?}");
     }
 
-    let files = generate(&ir);
+    let files = generate(&ir)?;
 
     for file in files {
         write_generated_file(&args.output, &file.path, &file.content)?;

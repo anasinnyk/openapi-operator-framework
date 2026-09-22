@@ -392,9 +392,9 @@ fn extract_object(value: &Value, location: &str) -> Result<SchemaIr, LoaderError
     }
 
     let additional_properties = match value.get("additionalProperties") {
-        None | Some(Value::Bool(false)) => AdditionalPropertiesIr::Forbidden,
+        None | Some(Value::Bool(true)) => AdditionalPropertiesIr::Any,
 
-        Some(Value::Bool(true)) => AdditionalPropertiesIr::Any,
+        Some(Value::Bool(false)) => AdditionalPropertiesIr::Forbidden,
 
         Some(schema) if schema.is_object() => AdditionalPropertiesIr::Typed {
             schema: Box::new(extract_schema(
