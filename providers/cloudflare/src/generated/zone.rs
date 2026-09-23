@@ -297,6 +297,30 @@ pub struct ZoneStatus {
     #[serde(default)]
     pub conditions: Vec<k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition>,
 }
+pub async fn observe(
+    kube_client: &kube::Client,
+    provider_client: &crate::generated::client::ProviderClient,
+    resource: &Zone,
+) -> Result<core::reconciler::Observation, core::error::ReconcileError> {
+    let zone_id = (async {
+        core::api::resolve_field_value(&resource, "status.atProvider.id")
+    })
+        .await?
+        .ok_or_else(|| {
+            core::error::ResolveValueError::Missing(
+                format!("could not resolve path parameter {}", "zone_id",),
+            )
+        })?;
+    let request = provider_client.zones_0_get(&zone_id);
+    let credentials = resolve_credentials(kube_client, resource).await?;
+    let request = request.with_credentials(&credentials);
+    let observed = request.send_optional().await?;
+    let at_provider = observed.map(serde_json::to_value).transpose()?;
+    Ok(core::reconciler::Observation {
+        exists: at_provider.is_some(),
+        at_provider,
+    })
+}
 pub async fn resolve_credentials(
     client: &kube::Client,
     resource: &Zone,
@@ -335,30 +359,6 @@ pub async fn resolve_credentials(
     let value = core::reference::resolve_secret_key(client, &namespace_0, selector)
         .await?;
     Ok(crate::generated::client::ApiTokenCredential::new(value)?)
-}
-pub async fn observe(
-    kube_client: &kube::Client,
-    provider_client: &crate::generated::client::ProviderClient,
-    resource: &Zone,
-) -> Result<core::reconciler::Observation, core::error::ReconcileError> {
-    let zone_id = (async {
-        core::api::resolve_field_value(&resource, "status.atProvider.id")
-    })
-        .await?
-        .ok_or_else(|| {
-            core::error::ResolveValueError::Missing(
-                format!("could not resolve path parameter {}", "zone_id",),
-            )
-        })?;
-    let request = provider_client.zones_0_get(&zone_id);
-    let credentials = resolve_credentials(kube_client, resource).await?;
-    let request = request.with_credentials(&credentials);
-    let observed = request.send_optional().await?;
-    let at_provider = observed.map(serde_json::to_value).transpose()?;
-    Ok(core::reconciler::Observation {
-        exists: at_provider.is_some(),
-        at_provider,
-    })
 }
 pub async fn update_status(
     client: &kube::Client,
@@ -413,6 +413,11 @@ pub async fn update_status(
     };
     let patch = serde_json::json!({ "status" : status, });
     let api: kube::Api<Zone> = kube::Api::namespaced(client.clone(), &namespace);
+    let current_status = serde_json::to_value(&resource.status)?;
+    let desired_status = serde_json::to_value(Some(&status))?;
+    if current_status == desired_status {
+        return Ok(());
+    }
     api.patch_status(
             &name,
             &kube::api::PatchParams::default(),
@@ -420,4 +425,33 @@ pub async fn update_status(
         )
         .await?;
     Ok(())
+}
+pub async fn reconcile(
+    resource: std::sync::Arc<Zone>,
+    context: std::sync::Arc<
+        core::reconciler::ControllerContext<crate::generated::client::ProviderClient>,
+    >,
+) -> Result<kube::runtime::controller::Action, core::error::ReconcileError> {
+    let observation = observe(
+            &context.kube_client,
+            &context.provider_client,
+            resource.as_ref(),
+        )
+        .await?;
+    update_status(&context.kube_client, resource.as_ref(), &observation).await?;
+    let requeue_after = if observation.exists {
+        std::time::Duration::from_secs(300)
+    } else {
+        std::time::Duration::from_secs(30)
+    };
+    Ok(kube::runtime::controller::Action::requeue(requeue_after))
+}
+pub fn error_policy(
+    _resource: std::sync::Arc<Zone>,
+    _error: &core::error::ReconcileError,
+    _context: std::sync::Arc<
+        core::reconciler::ControllerContext<crate::generated::client::ProviderClient>,
+    >,
+) -> kube::runtime::controller::Action {
+    kube::runtime::controller::Action::requeue(std::time::Duration::from_secs(30))
 }

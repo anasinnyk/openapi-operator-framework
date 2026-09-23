@@ -25,14 +25,14 @@ pub fn generate_resource(
     name: &ResourceName,
     resource: &ResourceIr,
 ) -> Result<GeneratedFile, GeneratorError> {
-    let spec = generate_spec(ir, resource)?;
-    let status = generate_status(resource)?;
-    let observe = generate_observe(ir, name, resource)?;
-    let credentials = generate_resolve_credentials(ir, name, resource)?;
-    let update_status = generate_update_status(resource)?;
-
-    let custom_resource =
-        generate_custom_resource(&[spec, status, credentials, observe, update_status]);
+    let custom_resource = generate_custom_resource(&[
+        generate_spec(ir, resource)?,
+        generate_status(resource)?,
+        generate_observe(ir, name, resource)?,
+        generate_resolve_credentials(ir, name, resource)?,
+        generate_update_status(resource)?,
+        generate_reconciler(resource)?,
+    ]);
 
     let content = format_tokens(custom_resource)?;
 
@@ -485,15 +485,13 @@ pub fn generate_update_status(resource: &ResourceIr) -> Result<TokenStream, Gene
                     status: condition_status.into(),
                     reason: reason.into(),
                     message: message.into(),
-                    observed_generation:
-                        resource.metadata.generation,
+                    observed_generation: resource.metadata.generation,
                     last_transition_time,
                 };
 
             let status = #status_ident {
                 at_provider,
-                observed_generation:
-                    resource.metadata.generation,
+                observed_generation: resource.metadata.generation,
                 conditions: vec![condition],
             };
 
@@ -507,6 +505,13 @@ pub fn generate_update_status(resource: &ResourceIr) -> Result<TokenStream, Gene
                     &namespace,
                 );
 
+            let current_status = serde_json::to_value(&resource.status)?;
+            let desired_status = serde_json::to_value(Some(&status))?;
+
+            if current_status == desired_status {
+                return Ok(());
+            }
+
             api.patch_status(
                 &name,
                 &kube::api::PatchParams::default(),
@@ -515,6 +520,65 @@ pub fn generate_update_status(resource: &ResourceIr) -> Result<TokenStream, Gene
             .await?;
 
             Ok(())
+        }
+    })
+}
+
+pub fn generate_reconciler(resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
+    let resource_ident = type_ident(&resource.kind)?;
+
+    Ok(quote! {
+        pub async fn reconcile(
+            resource: std::sync::Arc<#resource_ident>,
+            context: std::sync::Arc<
+                core::reconciler::ControllerContext<
+                    crate::generated::client::ProviderClient
+                >
+            >,
+        ) -> Result<
+            kube::runtime::controller::Action,
+            core::error::ReconcileError,
+        > {
+            let observation = observe(
+                &context.kube_client,
+                &context.provider_client,
+                resource.as_ref(),
+            )
+            .await?;
+
+            update_status(
+                &context.kube_client,
+                resource.as_ref(),
+                &observation,
+            )
+            .await?;
+
+            let requeue_after = if observation.exists {
+                std::time::Duration::from_secs(300)
+            } else {
+                // @TODO: IMPLEMENT CREATE
+                std::time::Duration::from_secs(30)
+            };
+
+            Ok(
+                kube::runtime::controller::Action::requeue(
+                    requeue_after,
+                ),
+            )
+        }
+
+        pub fn error_policy(
+            _resource: std::sync::Arc<#resource_ident>,
+            _error: &core::error::ReconcileError,
+            _context: std::sync::Arc<
+                core::reconciler::ControllerContext<
+                    crate::generated::client::ProviderClient
+                >
+            >,
+        ) -> kube::runtime::controller::Action {
+            kube::runtime::controller::Action::requeue(
+                std::time::Duration::from_secs(30),
+            )
         }
     })
 }

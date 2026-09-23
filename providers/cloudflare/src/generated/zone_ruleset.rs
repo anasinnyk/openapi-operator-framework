@@ -76,61 +76,6 @@ pub struct RulesetStatus {
     #[serde(default)]
     pub conditions: Vec<k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition>,
 }
-pub async fn resolve_credentials(
-    client: &kube::Client,
-    resource: &Ruleset,
-) -> Result<crate::generated::client::ApiTokenCredential, core::api::CredentialError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            core::api::CredentialError::MissingValue(
-                format!("{} has no namespace", "Ruleset",),
-            )
-        })?;
-    let reference_0 = (resource.spec.for_provider.zone_ref)
-        .as_ref()
-        .ok_or_else(|| {
-            core::error::CredentialError::MissingValue(
-                format!("resource reference {} is not set", "spec.forProvider.zoneRef",),
-            )
-        })?;
-    let namespace_0 = reference_0.namespace.clone().unwrap_or_else(|| namespace.clone());
-    let api_0: kube::Api<crate::generated::zone::Zone> = kube::Api::namespaced(
-        client.clone(),
-        &namespace_0,
-    );
-    let related_0 = api_0.get(&reference_0.name).await?;
-    let reference_1 = (related_0.spec.for_provider.account_ref)
-        .as_ref()
-        .ok_or_else(|| {
-            core::error::CredentialError::MissingValue(
-                format!(
-                    "resource reference {} is not set", "spec.forProvider.accountRef",
-                ),
-            )
-        })?;
-    let namespace_1 = reference_1
-        .namespace
-        .clone()
-        .unwrap_or_else(|| namespace_0.clone());
-    let api_1: kube::Api<crate::generated::account::Account> = kube::Api::namespaced(
-        client.clone(),
-        &namespace_1,
-    );
-    let related_1 = api_1.get(&reference_1.name).await?;
-    let selector = (related_1.spec.for_provider.api_token_secret_ref)
-        .as_ref()
-        .ok_or_else(|| {
-            core::api::CredentialError::MissingValue(
-                format!(
-                    "credential field {} is not set",
-                    "spec.forProvider.apiTokenSecretRef",
-                ),
-            )
-        })?;
-    let value = core::reference::resolve_secret_key(client, &namespace_1, selector)
-        .await?;
-    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
-}
 pub async fn observe(
     kube_client: &kube::Client,
     provider_client: &crate::generated::client::ProviderClient,
@@ -189,6 +134,61 @@ pub async fn observe(
         at_provider,
     })
 }
+pub async fn resolve_credentials(
+    client: &kube::Client,
+    resource: &Ruleset,
+) -> Result<crate::generated::client::ApiTokenCredential, core::api::CredentialError> {
+    let namespace = kube::ResourceExt::namespace(resource)
+        .ok_or_else(|| {
+            core::api::CredentialError::MissingValue(
+                format!("{} has no namespace", "Ruleset",),
+            )
+        })?;
+    let reference_0 = (resource.spec.for_provider.zone_ref)
+        .as_ref()
+        .ok_or_else(|| {
+            core::error::CredentialError::MissingValue(
+                format!("resource reference {} is not set", "spec.forProvider.zoneRef",),
+            )
+        })?;
+    let namespace_0 = reference_0.namespace.clone().unwrap_or_else(|| namespace.clone());
+    let api_0: kube::Api<crate::generated::zone::Zone> = kube::Api::namespaced(
+        client.clone(),
+        &namespace_0,
+    );
+    let related_0 = api_0.get(&reference_0.name).await?;
+    let reference_1 = (related_0.spec.for_provider.account_ref)
+        .as_ref()
+        .ok_or_else(|| {
+            core::error::CredentialError::MissingValue(
+                format!(
+                    "resource reference {} is not set", "spec.forProvider.accountRef",
+                ),
+            )
+        })?;
+    let namespace_1 = reference_1
+        .namespace
+        .clone()
+        .unwrap_or_else(|| namespace_0.clone());
+    let api_1: kube::Api<crate::generated::account::Account> = kube::Api::namespaced(
+        client.clone(),
+        &namespace_1,
+    );
+    let related_1 = api_1.get(&reference_1.name).await?;
+    let selector = (related_1.spec.for_provider.api_token_secret_ref)
+        .as_ref()
+        .ok_or_else(|| {
+            core::api::CredentialError::MissingValue(
+                format!(
+                    "credential field {} is not set",
+                    "spec.forProvider.apiTokenSecretRef",
+                ),
+            )
+        })?;
+    let value = core::reference::resolve_secret_key(client, &namespace_1, selector)
+        .await?;
+    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+}
 pub async fn update_status(
     client: &kube::Client,
     resource: &Ruleset,
@@ -242,6 +242,11 @@ pub async fn update_status(
     };
     let patch = serde_json::json!({ "status" : status, });
     let api: kube::Api<Ruleset> = kube::Api::namespaced(client.clone(), &namespace);
+    let current_status = serde_json::to_value(&resource.status)?;
+    let desired_status = serde_json::to_value(Some(&status))?;
+    if current_status == desired_status {
+        return Ok(());
+    }
     api.patch_status(
             &name,
             &kube::api::PatchParams::default(),
@@ -249,4 +254,33 @@ pub async fn update_status(
         )
         .await?;
     Ok(())
+}
+pub async fn reconcile(
+    resource: std::sync::Arc<Ruleset>,
+    context: std::sync::Arc<
+        core::reconciler::ControllerContext<crate::generated::client::ProviderClient>,
+    >,
+) -> Result<kube::runtime::controller::Action, core::error::ReconcileError> {
+    let observation = observe(
+            &context.kube_client,
+            &context.provider_client,
+            resource.as_ref(),
+        )
+        .await?;
+    update_status(&context.kube_client, resource.as_ref(), &observation).await?;
+    let requeue_after = if observation.exists {
+        std::time::Duration::from_secs(300)
+    } else {
+        std::time::Duration::from_secs(30)
+    };
+    Ok(kube::runtime::controller::Action::requeue(requeue_after))
+}
+pub fn error_policy(
+    _resource: std::sync::Arc<Ruleset>,
+    _error: &core::error::ReconcileError,
+    _context: std::sync::Arc<
+        core::reconciler::ControllerContext<crate::generated::client::ProviderClient>,
+    >,
+) -> kube::runtime::controller::Action {
+    kube::runtime::controller::Action::requeue(std::time::Duration::from_secs(30))
 }
