@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ir::{
-    AdditionalPropertiesIr, CredentialsIr, FieldIr, HttpMethod, LifecycleIr, OperationId,
-    OperationIr, ProviderIr, ReferenceIr, ResourceIr, ResourceName, SchemaIr, SchemaName,
-    ValueExpr,
+    AdditionalPropertiesIr, ApiKeyLocationIr, CredentialsIr, FieldIr, HttpMethod, LifecycleIr,
+    OperationId, OperationIr, ProviderIr, ReferenceIr, ResourceIr, ResourceName, SchemaIr,
+    SchemaName, SecuritySchemeIr, SecuritySchemeName, ValueExpr,
 };
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -94,6 +94,7 @@ pub fn extract(openapi: &Value) -> Result<ProviderIr, LoaderError> {
         .to_owned();
 
     let schemas = extract_schemas(openapi)?;
+    let security_schemes = extract_security_schemes(openapi)?;
 
     Ok(ProviderIr {
         version: 1,
@@ -101,6 +102,7 @@ pub fn extract(openapi: &Value) -> Result<ProviderIr, LoaderError> {
         schemas,
         resources,
         operations,
+        security_schemes,
     })
 }
 
@@ -573,6 +575,94 @@ fn resolve_local_reference<'a>(
     }
 
     Ok(current)
+}
+
+pub fn extract_security_schemes(
+    openapi: &serde_json::Value,
+) -> Result<BTreeMap<SecuritySchemeName, SecuritySchemeIr>, LoaderError> {
+    let Some(schemes) = openapi
+        .pointer("/components/securitySchemes")
+        .and_then(serde_json::Value::as_object)
+    else {
+        return Ok(BTreeMap::new());
+    };
+
+    let mut result = BTreeMap::new();
+
+    for (name, value) in schemes {
+        let location = format!("components.securitySchemes.{name}");
+
+        let scheme_type = value
+            .get("type")
+            .and_then(serde_json::Value::as_str)
+            .ok_or_else(|| LoaderError::InvalidOpenApi(format!("{location}.type is required")))?;
+
+        let scheme = match scheme_type {
+            "apiKey" => {
+                let parameter_name = value
+                    .get("name")
+                    .and_then(serde_json::Value::as_str)
+                    .ok_or_else(|| {
+                        LoaderError::InvalidOpenApi(format!("{location}.name is required"))
+                    })?
+                    .to_owned();
+
+                let parameter_location = value
+                    .get("in")
+                    .and_then(serde_json::Value::as_str)
+                    .ok_or_else(|| {
+                        LoaderError::InvalidOpenApi(format!("{location}.in is required"))
+                    })?;
+
+                let location = match parameter_location {
+                    "header" => ApiKeyLocationIr::Header,
+                    "query" => ApiKeyLocationIr::Query,
+                    "cookie" => ApiKeyLocationIr::Cookie,
+
+                    other => {
+                        return Err(LoaderError::InvalidOpenApi(format!(
+                            "{location}.in has unsupported value {other}"
+                        )));
+                    }
+                };
+
+                SecuritySchemeIr::ApiKey {
+                    name: parameter_name,
+                    location,
+                }
+            }
+
+            "http" => {
+                let scheme = value
+                    .get("scheme")
+                    .and_then(serde_json::Value::as_str)
+                    .ok_or_else(|| {
+                        LoaderError::InvalidOpenApi(format!("{location}.scheme is required"))
+                    })?
+                    .to_ascii_lowercase();
+
+                let bearer_format = value
+                    .get("bearerFormat")
+                    .and_then(serde_json::Value::as_str)
+                    .map(str::to_owned);
+
+                SecuritySchemeIr::Http {
+                    scheme,
+                    bearer_format,
+                }
+            }
+
+            other => {
+                return Err(LoaderError::InvalidOpenApi(format!(
+                    "{location} has unsupported type {other}"
+                )));
+            }
+        };
+
+        result.insert(SecuritySchemeName(name.clone()), scheme);
+    }
+
+    Ok(result)
 }
 
 fn extract_variants(value: &Value, location: &str) -> Result<Vec<SchemaIr>, LoaderError> {

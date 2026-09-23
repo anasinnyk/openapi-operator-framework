@@ -4,8 +4,12 @@ use crate::{
         naming::{field_ident, type_ident},
         schema::{SchemaCodegen, generate_http_client},
     },
-    ir::{CredentialSourceIr, FieldPath, ProviderIr, ResourceIr, ResourceName, ValueExpr},
+    ir::{
+        ApiKeyLocationIr, CredentialSourceIr, FieldPath, ProviderIr, ResourceIr, ResourceName,
+        SecuritySchemeIr, ValueExpr,
+    },
 };
+use heck::ToUpperCamelCase;
 use proc_macro2::TokenStream;
 use quote::quote;
 use std::collections::{BTreeMap, BTreeSet};
@@ -274,14 +278,92 @@ fn for_provider_field(path: &FieldPath) -> Result<&str, GeneratorError> {
     Ok(field)
 }
 
+pub fn generate_credentials(ir: &ProviderIr) -> Result<TokenStream, GeneratorError> {
+    let mut generated = Vec::new();
+
+    for (name, scheme) in &ir.security_schemes {
+        let type_name = format!("{}Credential", name.0.to_upper_camel_case());
+        let credential_ident = type_ident(&type_name)?;
+
+        let inner_type;
+        let constructor;
+
+        match scheme {
+            SecuritySchemeIr::Http { scheme, .. } if scheme == "bearer" => {
+                inner_type = quote!(provider_core::BearerCredential);
+
+                constructor = quote! {
+                    provider_core::BearerCredential::new(value)?
+                };
+            }
+
+            SecuritySchemeIr::ApiKey {
+                name: header_name,
+                location: ApiKeyLocationIr::Header,
+            } => {
+                inner_type = quote!(provider_core::HeaderCredential);
+
+                constructor = quote! {
+                    provider_core::HeaderCredential::new(
+                        #header_name,
+                        value,
+                    )?
+                };
+            }
+
+            _ => {
+                return Err(GeneratorError::UnsupportedCredential(format!(
+                    "security scheme {} is not supported",
+                    name.0,
+                )));
+            }
+        }
+
+        generated.push(quote! {
+            pub struct #credential_ident(#inner_type);
+
+            impl #credential_ident {
+                pub fn new(
+                    value: impl AsRef<str>,
+                ) -> Result<
+                    Self,
+                    provider_core::CredentialError,
+                > {
+                    Ok(Self(#constructor))
+                }
+            }
+
+            impl provider_core::ApiCredential
+                for #credential_ident
+            {
+                fn apply(
+                    &self,
+                    request: reqwest::RequestBuilder,
+                ) -> reqwest::RequestBuilder {
+                    provider_core::ApiCredential::apply(
+                        &self.0,
+                        request,
+                    )
+                }
+            }
+        });
+    }
+
+    Ok(quote! {
+        #(#generated)*
+    })
+}
+
 pub fn generate_client_file(ir: &ProviderIr) -> Result<GeneratedFile, GeneratorError> {
     let mut schema_codegen = SchemaCodegen::new(&ir.schemas);
 
+    let credentials = generate_credentials(ir)?;
     let client = generate_http_client(ir, &mut schema_codegen)?;
     let declarations = schema_codegen.finish();
 
     let content = quote! {
         #(#declarations)*
+        #credentials
         #client
     };
 

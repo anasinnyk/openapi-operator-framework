@@ -19,4 +19,7 @@ pub enum GeneratorError {
 
     #[error("cyclic schema reference is not supported yet: {0}")]
     CyclicSchema(String),
+
+    #[error("unsupported credential: {0}")]
+    UnsupportedCredential(String),
 }

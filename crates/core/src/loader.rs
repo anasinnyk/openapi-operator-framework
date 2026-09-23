@@ -35,6 +35,9 @@ pub enum LoaderError {
 
     #[error("failed to build ProviderIr: {0}")]
     Ir(String),
+
+    #[error("invalid OpenAPI: {0}")]
+    InvalidOpenApi(String),
 }
 
 pub fn load(openapi_path: &Path, overlay_paths: &[PathBuf]) -> Result<ProviderIr> {

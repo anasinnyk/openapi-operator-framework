@@ -1,7 +1,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ir::{
-    CredentialSourceIr, OperationId, OperationIr, ProviderIr, ResourceIr, ResourceName, ValueExpr,
+    ApiKeyLocationIr, CredentialSourceIr, OperationId, OperationIr, ProviderIr, ResourceIr,
+    ResourceName, SecuritySchemeIr, ValueExpr,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -82,6 +83,37 @@ fn validate_credentials(
         return;
     };
 
+    let scheme_location = format!("resources.{}.credentials.security_scheme", name.0);
+
+    match ir.security_schemes.get(&credentials.security_scheme) {
+        None => errors.push(ValidationError {
+            location: scheme_location,
+            message: format!(
+                "security scheme {:?} does not exist",
+                credentials.security_scheme.0,
+            ),
+        }),
+
+        Some(SecuritySchemeIr::Http { scheme, .. }) if scheme != "bearer" => {
+            errors.push(ValidationError {
+                location: scheme_location,
+                message: format!("HTTP authentication scheme {scheme:?} is not supported yet"),
+            });
+        }
+
+        Some(SecuritySchemeIr::ApiKey {
+            location: ApiKeyLocationIr::Query | ApiKeyLocationIr::Cookie,
+            ..
+        }) => {
+            errors.push(ValidationError {
+                location: scheme_location,
+                message: "query and cookie API keys are not supported yet".into(),
+            });
+        }
+
+        _ => {}
+    }
+
     match &credentials.source {
         CredentialSourceIr::SecretKeySelector { path } => {
             if path.0.is_empty() {
@@ -94,7 +126,7 @@ fn validate_credentials(
         CredentialSourceIr::Related { via } => match resolve_relation(ir, name, via) {
             Ok(target) => {
                 let has_direct_credentials = target.credentials.as_ref().is_some_and(|creds| {
-                    matches!(creds.source, CredentialSourceIr::SecretKeySelector { .. })
+                    matches!(&creds.source, CredentialSourceIr::SecretKeySelector { .. })
                 });
 
                 if !has_direct_credentials {

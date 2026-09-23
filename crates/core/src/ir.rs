@@ -9,6 +9,7 @@ pub struct ProviderIr {
     pub schemas: BTreeMap<SchemaName, SchemaIr>,
     pub resources: BTreeMap<ResourceName, ResourceIr>,
     pub operations: BTreeMap<OperationId, OperationIr>,
+    pub security_schemes: BTreeMap<SecuritySchemeName, SecuritySchemeIr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -61,7 +62,7 @@ pub struct ReferenceIr {
 pub struct CredentialsIr {
     pub source: CredentialSourceIr,
 
-    pub security_scheme: String,
+    pub security_scheme: SecuritySchemeName,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -227,6 +228,29 @@ pub enum AdditionalPropertiesIr {
 
     Typed {
         schema: Box<SchemaIr>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct SecuritySchemeName(pub String);
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ApiKeyLocationIr {
+    Header,
+    Query,
+    Cookie,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SecuritySchemeIr {
+    ApiKey {
+        name: String,
+        location: ApiKeyLocationIr,
+    },
+
+    Http {
+        scheme: String,
+        bearer_format: Option<String>,
     },
 }
 
