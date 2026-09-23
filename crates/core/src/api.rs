@@ -1,34 +1,4 @@
-#[derive(Debug, thiserror::Error)]
-pub enum ClientError {
-    #[error("HTTP request failed: {0}")]
-    Http(#[from] reqwest::Error),
-
-    #[error("failed to decode response: {0}")]
-    Decode(#[from] serde_json::Error),
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum CredentialError {
-    #[error("invalid credential header name: {0}")]
-    InvalidHeaderName(#[from] reqwest::header::InvalidHeaderName),
-
-    #[error("invalid credential header value: {0}")]
-    InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
-
-    #[error("Kubernetes API request failed: {0}")]
-    Kubernetes(#[from] kube::Error),
-
-    #[error("{0}")]
-    MissingValue(String),
-
-    #[error("Secret {secret:?} key {key:?} is not valid UTF-8")]
-    InvalidSecretUtf8 {
-        secret: String,
-        key: String,
-        #[source]
-        source: std::string::FromUtf8Error,
-    },
-}
+use crate::error::{ClientError, CredentialError};
 
 pub trait ApiCredential {
     fn apply(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder;
@@ -73,6 +43,25 @@ where
         };
 
         Ok(serde_json::from_slice(body)?)
+    }
+
+    pub async fn send_optional(self) -> Result<Option<T>, ClientError> {
+        let response = self.request.send().await?;
+
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+
+        let response = response.error_for_status()?;
+        let body = response.bytes().await?;
+
+        let body = if body.is_empty() {
+            &b"null"[..]
+        } else {
+            body.as_ref()
+        };
+
+        Ok(Some(serde_json::from_slice(body)?))
     }
 }
 

@@ -79,7 +79,7 @@ pub async fn resolve_credentials(
     let reference_0 = (resource.spec.for_provider.zone_ref)
         .as_ref()
         .ok_or_else(|| {
-            provider_core::CredentialError::MissingValue(
+            core::error::CredentialError::MissingValue(
                 format!("resource reference {} is not set", "spec.forProvider.zoneRef",),
             )
         })?;
@@ -92,7 +92,7 @@ pub async fn resolve_credentials(
     let reference_1 = (related_0.spec.for_provider.account_ref)
         .as_ref()
         .ok_or_else(|| {
-            provider_core::CredentialError::MissingValue(
+            core::error::CredentialError::MissingValue(
                 format!(
                     "resource reference {} is not set", "spec.forProvider.accountRef",
                 ),
@@ -120,4 +120,63 @@ pub async fn resolve_credentials(
     let value = core::reference::resolve_secret_key(client, &namespace_1, selector)
         .await?;
     Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+}
+pub async fn observe(
+    kube_client: &kube::Client,
+    provider_client: &crate::generated::client::ProviderClient,
+    resource: &DnsRecord,
+) -> Result<core::reconciler::Observation, core::error::ReconcileError> {
+    let dns_record_id = (async {
+        core::api::resolve_field_value(&resource, "status.atProvider.id")
+    })
+        .await?
+        .ok_or_else(|| {
+            core::error::ResolveValueError::Missing(
+                format!("could not resolve path parameter {}", "dns_record_id",),
+            )
+        })?;
+    let zone_id = (async {
+        let root_namespace = kube::ResourceExt::namespace(resource)
+            .ok_or_else(|| {
+                core::error::ResolveValueError::Missing(
+                    "resource has no namespace".into(),
+                )
+            })?;
+        let reference_0 = (resource.spec.for_provider.zone_ref)
+            .as_ref()
+            .ok_or_else(|| {
+                core::error::ResolveValueError::Missing(
+                    format!(
+                        "resource reference {} is not set", "spec.forProvider.zoneRef",
+                    ),
+                )
+            })?;
+        let namespace_0 = reference_0
+            .namespace
+            .clone()
+            .unwrap_or_else(|| root_namespace.clone());
+        let api_0: kube::Api<crate::generated::zone::Zone> = kube::Api::namespaced(
+            client.clone(),
+            &namespace_0,
+        );
+        let related_0 = api_0.get(&reference_0.name).await?;
+        (async { core::api::resolve_field_value(&&related_0, "status.atProvider.id") })
+            .await
+    })
+        .await?
+        .ok_or_else(|| {
+            core::error::ResolveValueError::Missing(
+                format!("could not resolve path parameter {}", "zone_id",),
+            )
+        })?;
+    let request = provider_client
+        .dns_records_for_a_zone_dns_record_details(&dns_record_id, &zone_id);
+    let credentials = resolve_credentials(kube_client, resource).await?;
+    let request = request.with_credentials(&credentials);
+    let observed = request.send_optional().await?;
+    let at_provider = observed.map(serde_json::to_value).transpose()?;
+    Ok(core::reconciler::Observation {
+        exists: at_provider.is_some(),
+        at_provider,
+    })
 }

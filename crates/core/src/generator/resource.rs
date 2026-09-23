@@ -5,13 +5,13 @@ use crate::{
         schema::{SchemaCodegen, generate_http_client},
     },
     ir::{
-        ApiKeyLocationIr, CredentialSourceIr, FieldPath, ProviderIr, ResourceIr, ResourceName,
-        SecuritySchemeIr, ValueExpr,
+        ApiKeyLocationIr, CredentialSourceIr, FieldPath, OperationIr, ProviderIr, ResourceIr,
+        ResourceName, SecuritySchemeIr, ValueExpr,
     },
 };
-use heck::ToUpperCamelCase;
+use heck::{ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{format_ident, quote};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
@@ -27,15 +27,307 @@ pub fn generate_resource(
 ) -> Result<GeneratedFile, GeneratorError> {
     let spec = generate_spec(ir, resource)?;
     let status = generate_status(resource)?;
+    let observe = generate_observe(ir, name, resource)?;
     let credentials = generate_resolve_credentials(ir, name, resource)?;
 
-    let custom_resource = generate_custom_resource(&spec, &status, &credentials);
+    let custom_resource = generate_custom_resource(&spec, &status, &credentials, &observe);
 
     let content = format_tokens(custom_resource)?;
 
     Ok(GeneratedFile {
         path: format!("src/generated/{}.rs", name.0).into(),
         content,
+    })
+}
+
+fn generate_custom_resource(
+    spec: &TokenStream,
+    status: &TokenStream,
+    credentials: &TokenStream,
+    observe: &TokenStream,
+) -> TokenStream {
+    quote! {
+        // This file is generated. Do not edit manually.
+
+        #status
+        #spec
+
+        #credentials
+        #observe
+    }
+}
+
+pub struct GeneratedPathParameters {
+    pub bindings: Vec<TokenStream>,
+    pub arguments: Vec<TokenStream>,
+}
+
+pub fn generate_path_parameters(
+    ir: &ProviderIr,
+    resource_name: &ResourceName,
+    operation: &OperationIr,
+) -> Result<GeneratedPathParameters, GeneratorError> {
+    let mut bindings = Vec::new();
+    let mut arguments = Vec::new();
+
+    for (parameter_name, expression) in &operation.path_parameters {
+        let parameter_ident = field_ident(parameter_name)?;
+
+        let value = generate_value_expr(ir, resource_name, quote!(resource), expression)?;
+
+        bindings.push(quote! {
+            let #parameter_ident = (#value)
+                .await?
+                .ok_or_else(|| {
+                    core::error::ResolveValueError::Missing(
+                        format!(
+                            "could not resolve path parameter {}",
+                            #parameter_name,
+                        ),
+                    )
+                })?;
+        });
+
+        arguments.push(quote!(&#parameter_ident));
+    }
+
+    Ok(GeneratedPathParameters {
+        bindings,
+        arguments,
+    })
+}
+
+pub fn generate_observe(
+    ir: &ProviderIr,
+    resource_name: &ResourceName,
+    resource: &ResourceIr,
+) -> Result<TokenStream, GeneratorError> {
+    let operation_id = &resource.lifecycle.observe;
+
+    let operation = ir.operations.get(operation_id).ok_or_else(|| {
+        GeneratorError::InvalidIr(format!("unknown observe operation {}", operation_id.0))
+    })?;
+
+    let GeneratedPathParameters {
+        bindings,
+        arguments,
+    } = generate_path_parameters(ir, resource_name, operation)?;
+
+    let resource_ident = type_ident(&resource.kind)?;
+    let method_ident = field_ident(&operation_id.0.to_snake_case())?;
+
+    let credentials = if resource.credentials.is_some() {
+        quote! {
+            let credentials =
+                resolve_credentials(kube_client, resource).await?;
+
+            let request =
+                request.with_credentials(&credentials);
+        }
+    } else {
+        TokenStream::new()
+    };
+
+    Ok(quote! {
+        pub async fn observe(
+            kube_client: &kube::Client,
+            provider_client:
+                &crate::generated::client::ProviderClient,
+            resource: &#resource_ident,
+        ) -> Result<
+            core::reconciler::Observation,
+            core::error::ReconcileError,
+        > {
+            #(#bindings)*
+
+            let request = provider_client.#method_ident(
+                #(#arguments),*
+            );
+
+            #credentials
+
+            let observed = request.send_optional().await?;
+
+            let at_provider = observed
+                .map(serde_json::to_value)
+                .transpose()?;
+
+            Ok(core::reconciler::Observation {
+                exists: at_provider.is_some(),
+                at_provider,
+            })
+        }
+    })
+}
+
+fn generate_value_expr(
+    ir: &ProviderIr,
+    resource_name: &ResourceName,
+    resource_value: TokenStream,
+    expression: &ValueExpr,
+) -> Result<TokenStream, GeneratorError> {
+    match expression {
+        ValueExpr::Field { path } => {
+            let path = &path.0;
+
+            Ok(quote! {
+                async {
+                    core::api::resolve_field_value(
+                        &#resource_value,
+                        #path,
+                    )
+                }
+            })
+        }
+
+        ValueExpr::Literal { value } => Ok(quote! {
+            async {
+                Ok::<
+                    Option<String>,
+                    core::error::ResolveValueError,
+                >(Some(#value.to_owned()))
+            }
+        }),
+
+        ValueExpr::Coalesce { values } => {
+            let values = values
+                .iter()
+                .map(|value| generate_value_expr(ir, resource_name, resource_value.clone(), value))
+                .collect::<Result<Vec<_>, _>>()?;
+
+            Ok(quote! {
+                async {
+                    let mut resolved: Option<String> = None;
+
+                    #(
+                        if resolved.is_none() {
+                            resolved = (#values).await?;
+                        }
+                    )*
+
+                    Ok::<
+                        Option<String>,
+                        core::error::ResolveValueError,
+                    >(resolved)
+                }
+            })
+        }
+
+        ValueExpr::RelatedIdentifier { via, name } => {
+            generate_related_identifier(ir, resource_name, resource_value, via, name)
+        }
+    }
+}
+
+fn generate_related_identifier(
+    ir: &ProviderIr,
+    resource_name: &ResourceName,
+    resource_value: TokenStream,
+    via: &[String],
+    identifier_name: &str,
+) -> Result<TokenStream, GeneratorError> {
+    let mut current_resource_name = resource_name;
+    let mut current_resource = ir.resources.get(resource_name).ok_or_else(|| {
+        GeneratorError::InvalidIr(format!("unknown resource {}", resource_name.0,))
+    })?;
+
+    let mut current_value = resource_value.clone();
+    let mut current_namespace = quote!(root_namespace);
+    let mut traversal = Vec::new();
+
+    for (index, relation_name) in via.iter().enumerate() {
+        let relation = current_resource
+            .references
+            .get(relation_name)
+            .ok_or_else(|| {
+                GeneratorError::InvalidIr(format!(
+                    "resource {} has no relation {}",
+                    resource_name.0, relation_name,
+                ))
+            })?;
+
+        let target = ir.resources.get(&relation.target).ok_or_else(|| {
+            GeneratorError::InvalidIr(format!("unknown resource {}", relation.target.0,))
+        })?;
+
+        let reference_access = field_path_access(current_value.clone(), &relation.from)?;
+
+        let reference_ident = format_ident!("reference_{index}");
+        let namespace_ident = format_ident!("namespace_{index}");
+        let api_ident = format_ident!("api_{index}");
+        let related_ident = format_ident!("related_{index}");
+
+        let target_module = field_ident(&relation.target.0)?;
+        let target_ident = type_ident(&target.kind)?;
+
+        let reference_path = &relation.from.0;
+
+        traversal.push(quote! {
+            let #reference_ident = (#reference_access)
+                .as_ref()
+                .ok_or_else(|| {
+                    core::error::ResolveValueError::Missing(
+                        format!(
+                            "resource reference {} is not set",
+                            #reference_path,
+                        ),
+                    )
+                })?;
+
+            let #namespace_ident = #reference_ident
+                .namespace
+                .clone()
+                .unwrap_or_else(|| #current_namespace.clone());
+
+            let #api_ident: kube::Api<
+                crate::generated::#target_module::#target_ident
+            > = kube::Api::namespaced(
+                client.clone(),
+                &#namespace_ident,
+            );
+
+            let #related_ident = #api_ident
+                .get(&#reference_ident.name)
+                .await?;
+        });
+
+        current_resource = target;
+        current_resource_name = &relation.target;
+        current_value = quote!(&#related_ident);
+        current_namespace = quote!(#namespace_ident);
+    }
+
+    let identifier_expression = current_resource
+        .identifiers
+        .get(identifier_name)
+        .ok_or_else(|| {
+            GeneratorError::InvalidIr(format!(
+                "resource {} has no identifier {}",
+                current_resource.kind, identifier_name,
+            ))
+        })?;
+
+    let identifier_value = generate_value_expr(
+        ir,
+        current_resource_name,
+        current_value,
+        identifier_expression,
+    )?;
+
+    Ok(quote! {
+        async {
+            let root_namespace =
+                kube::ResourceExt::namespace(#resource_value)
+                    .ok_or_else(|| {
+                        core::error::ResolveValueError::Missing(
+                            "resource has no namespace".into(),
+                        )
+                    })?;
+
+            #(#traversal)*
+
+            (#identifier_value).await
+        }
     })
 }
 
@@ -216,21 +508,6 @@ fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorError>
     })
 }
 
-fn generate_custom_resource(
-    spec: &TokenStream,
-    status: &TokenStream,
-    credentials: &TokenStream,
-) -> TokenStream {
-    quote! {
-        // This file is generated. Do not edit manually.
-
-        #status
-        #spec
-
-        #credentials
-    }
-}
-
 fn generate_reference_fields(resource: &ResourceIr) -> Result<Vec<TokenStream>, GeneratorError> {
     resource
         .references
@@ -369,7 +646,7 @@ pub fn generate_resolve_credentials(
                         (#reference_access)
                             .as_ref()
                             .ok_or_else(|| {
-                                provider_core::CredentialError::MissingValue(
+                                core::error::CredentialError::MissingValue(
                                     format!(
                                         "resource reference {} is not set",
                                         #reference_path,
@@ -482,10 +759,10 @@ pub fn generate_credentials(ir: &ProviderIr) -> Result<TokenStream, GeneratorErr
 
         match scheme {
             SecuritySchemeIr::Http { scheme, .. } if scheme == "bearer" => {
-                inner_type = quote!(provider_core::BearerCredential);
+                inner_type = quote!(core::api::BearerCredential);
 
                 constructor = quote! {
-                    provider_core::BearerCredential::new(value)?
+                    core::api::BearerCredential::new(value)?
                 };
             }
 
@@ -493,10 +770,10 @@ pub fn generate_credentials(ir: &ProviderIr) -> Result<TokenStream, GeneratorErr
                 name: header_name,
                 location: ApiKeyLocationIr::Header,
             } => {
-                inner_type = quote!(provider_core::HeaderCredential);
+                inner_type = quote!(core::api::HeaderCredential);
 
                 constructor = quote! {
-                    provider_core::HeaderCredential::new(
+                    core::api::HeaderCredential::new(
                         #header_name,
                         value,
                     )?
@@ -519,20 +796,20 @@ pub fn generate_credentials(ir: &ProviderIr) -> Result<TokenStream, GeneratorErr
                     value: impl AsRef<str>,
                 ) -> Result<
                     Self,
-                    provider_core::CredentialError,
+                    core::api::CredentialError,
                 > {
                     Ok(Self(#constructor))
                 }
             }
 
-            impl provider_core::ApiCredential
+            impl core::api::ApiCredential
                 for #credential_ident
             {
                 fn apply(
                     &self,
                     request: reqwest::RequestBuilder,
                 ) -> reqwest::RequestBuilder {
-                    provider_core::ApiCredential::apply(
+                    core::api::ApiCredential::apply(
                         &self.0,
                         request,
                     )

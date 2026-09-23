@@ -161,3 +161,27 @@ pub async fn resolve_credentials(
     let value = core::reference::resolve_secret_key(client, &namespace, selector).await?;
     Ok(crate::generated::client::ApiTokenCredential::new(value)?)
 }
+pub async fn observe(
+    kube_client: &kube::Client,
+    provider_client: &crate::generated::client::ProviderClient,
+    resource: &Account,
+) -> Result<core::reconciler::Observation, core::error::ReconcileError> {
+    let account_id = (async {
+        core::api::resolve_field_value(&resource, "status.atProvider.id")
+    })
+        .await?
+        .ok_or_else(|| {
+            core::error::ResolveValueError::Missing(
+                format!("could not resolve path parameter {}", "account_id",),
+            )
+        })?;
+    let request = provider_client.accounts_account_details(&account_id);
+    let credentials = resolve_credentials(kube_client, resource).await?;
+    let request = request.with_credentials(&credentials);
+    let observed = request.send_optional().await?;
+    let at_provider = observed.map(serde_json::to_value).transpose()?;
+    Ok(core::reconciler::Observation {
+        exists: at_provider.is_some(),
+        at_provider,
+    })
+}

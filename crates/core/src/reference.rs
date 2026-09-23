@@ -1,4 +1,4 @@
-use crate::api::CredentialError;
+use crate::error::{CredentialError, ResolveValueError};
 use k8s_openapi::api::core::v1::{Secret, SecretKeySelector};
 use kube::Api;
 use schemars::JsonSchema;
@@ -51,4 +51,29 @@ pub async fn resolve_secret_key(
         key: selector.key.clone(),
         source,
     })
+}
+
+pub fn resolve_field_value(
+    resource: &impl serde::Serialize,
+    path: &str,
+) -> Result<Option<String>, ResolveValueError> {
+    let value = serde_json::to_value(resource)?;
+
+    let value = path
+        .split('.')
+        .try_fold(&value, |current, segment| current.get(segment));
+
+    let Some(value) = value else {
+        return Ok(None);
+    };
+
+    match value {
+        serde_json::Value::Null => Ok(None),
+        serde_json::Value::String(value) => Ok(Some(value.clone())),
+        serde_json::Value::Number(value) => Ok(Some(value.to_string())),
+        serde_json::Value::Bool(value) => Ok(Some(value.to_string())),
+        _ => Err(ResolveValueError::NonScalar {
+            path: path.to_owned(),
+        }),
+    }
 }

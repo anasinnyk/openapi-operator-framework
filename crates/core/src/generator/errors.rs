@@ -22,4 +22,7 @@ pub enum GeneratorError {
 
     #[error("unsupported credential: {0}")]
     UnsupportedCredential(String),
+
+    #[error("invalid IR: {0}")]
+    InvalidIr(String),
 }

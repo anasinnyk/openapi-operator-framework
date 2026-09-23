@@ -11564,48 +11564,48 @@ pub struct ZonesPostResponse {
     #[serde(rename = "success")]
     pub success: bool,
 }
-pub struct ApiEmailCredential(provider_core::HeaderCredential);
+pub struct ApiEmailCredential(core::api::HeaderCredential);
 impl ApiEmailCredential {
-    pub fn new(value: impl AsRef<str>) -> Result<Self, provider_core::CredentialError> {
-        Ok(Self(provider_core::HeaderCredential::new("X-Auth-Email", value)?))
+    pub fn new(value: impl AsRef<str>) -> Result<Self, core::api::CredentialError> {
+        Ok(Self(core::api::HeaderCredential::new("X-Auth-Email", value)?))
     }
 }
-impl provider_core::ApiCredential for ApiEmailCredential {
+impl core::api::ApiCredential for ApiEmailCredential {
     fn apply(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        provider_core::ApiCredential::apply(&self.0, request)
+        core::api::ApiCredential::apply(&self.0, request)
     }
 }
-pub struct ApiKeyCredential(provider_core::HeaderCredential);
+pub struct ApiKeyCredential(core::api::HeaderCredential);
 impl ApiKeyCredential {
-    pub fn new(value: impl AsRef<str>) -> Result<Self, provider_core::CredentialError> {
-        Ok(Self(provider_core::HeaderCredential::new("X-Auth-Key", value)?))
+    pub fn new(value: impl AsRef<str>) -> Result<Self, core::api::CredentialError> {
+        Ok(Self(core::api::HeaderCredential::new("X-Auth-Key", value)?))
     }
 }
-impl provider_core::ApiCredential for ApiKeyCredential {
+impl core::api::ApiCredential for ApiKeyCredential {
     fn apply(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        provider_core::ApiCredential::apply(&self.0, request)
+        core::api::ApiCredential::apply(&self.0, request)
     }
 }
-pub struct ApiTokenCredential(provider_core::BearerCredential);
+pub struct ApiTokenCredential(core::api::BearerCredential);
 impl ApiTokenCredential {
-    pub fn new(value: impl AsRef<str>) -> Result<Self, provider_core::CredentialError> {
-        Ok(Self(provider_core::BearerCredential::new(value)?))
+    pub fn new(value: impl AsRef<str>) -> Result<Self, core::api::CredentialError> {
+        Ok(Self(core::api::BearerCredential::new(value)?))
     }
 }
-impl provider_core::ApiCredential for ApiTokenCredential {
+impl core::api::ApiCredential for ApiTokenCredential {
     fn apply(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        provider_core::ApiCredential::apply(&self.0, request)
+        core::api::ApiCredential::apply(&self.0, request)
     }
 }
-pub struct UserServiceKeyCredential(provider_core::HeaderCredential);
+pub struct UserServiceKeyCredential(core::api::HeaderCredential);
 impl UserServiceKeyCredential {
-    pub fn new(value: impl AsRef<str>) -> Result<Self, provider_core::CredentialError> {
-        Ok(Self(provider_core::HeaderCredential::new("X-Auth-User-Service-Key", value)?))
+    pub fn new(value: impl AsRef<str>) -> Result<Self, core::api::CredentialError> {
+        Ok(Self(core::api::HeaderCredential::new("X-Auth-User-Service-Key", value)?))
     }
 }
-impl provider_core::ApiCredential for UserServiceKeyCredential {
+impl core::api::ApiCredential for UserServiceKeyCredential {
     fn apply(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        provider_core::ApiCredential::apply(&self.0, request)
+        core::api::ApiCredential::apply(&self.0, request)
     }
 }
 #[derive(Clone)]

@@ -1,9 +1,11 @@
 pub mod api;
 pub mod cli;
+pub mod error;
 pub mod extractor;
 pub mod generator;
 pub mod ir;
 pub mod loader;
 pub mod managed;
+pub mod reconciler;
 pub mod reference;
 pub mod validation;
