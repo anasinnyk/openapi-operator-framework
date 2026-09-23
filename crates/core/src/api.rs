@@ -14,6 +14,20 @@ pub enum CredentialError {
 
     #[error("invalid credential header value: {0}")]
     InvalidHeaderValue(#[from] reqwest::header::InvalidHeaderValue),
+
+    #[error("Kubernetes API request failed: {0}")]
+    Kubernetes(#[from] kube::Error),
+
+    #[error("{0}")]
+    MissingValue(String),
+
+    #[error("Secret {secret:?} key {key:?} is not valid UTF-8")]
+    InvalidSecretUtf8 {
+        secret: String,
+        key: String,
+        #[source]
+        source: std::string::FromUtf8Error,
+    },
 }
 
 pub trait ApiCredential {

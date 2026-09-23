@@ -297,3 +297,42 @@ pub struct ZoneSpec {
     #[serde(flatten)]
     pub management: core::managed::ManagedResourceSpec,
 }
+pub async fn resolve_credentials(
+    client: &kube::Client,
+    resource: &Zone,
+) -> Result<crate::generated::client::ApiTokenCredential, core::api::CredentialError> {
+    let namespace = kube::ResourceExt::namespace(resource)
+        .ok_or_else(|| {
+            core::api::CredentialError::MissingValue(
+                format!("{} has no namespace", "Zone",),
+            )
+        })?;
+    let reference_0 = (resource.spec.for_provider.account_ref)
+        .as_ref()
+        .ok_or_else(|| {
+            provider_core::CredentialError::MissingValue(
+                format!(
+                    "resource reference {} is not set", "spec.forProvider.accountRef",
+                ),
+            )
+        })?;
+    let namespace_0 = reference_0.namespace.clone().unwrap_or_else(|| namespace.clone());
+    let api_0: kube::Api<crate::generated::account::Account> = kube::Api::namespaced(
+        client.clone(),
+        &namespace_0,
+    );
+    let related_0 = api_0.get(&reference_0.name).await?;
+    let selector = (related_0.spec.for_provider.api_token_secret_ref)
+        .as_ref()
+        .ok_or_else(|| {
+            core::api::CredentialError::MissingValue(
+                format!(
+                    "credential field {} is not set",
+                    "spec.forProvider.apiTokenSecretRef",
+                ),
+            )
+        })?;
+    let value = core::reference::resolve_secret_key(client, &namespace_0, selector)
+        .await?;
+    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+}

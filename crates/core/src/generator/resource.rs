@@ -27,7 +27,9 @@ pub fn generate_resource(
 ) -> Result<GeneratedFile, GeneratorError> {
     let spec = generate_spec(ir, resource)?;
     let status = generate_status(resource)?;
-    let custom_resource = generate_custom_resource(&spec, &status);
+    let credentials = generate_resolve_credentials(ir, name, resource)?;
+
+    let custom_resource = generate_custom_resource(&spec, &status, &credentials);
 
     let content = format_tokens(custom_resource)?;
 
@@ -214,12 +216,18 @@ fn generate_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorError>
     })
 }
 
-fn generate_custom_resource(spec: &TokenStream, status: &TokenStream) -> TokenStream {
+fn generate_custom_resource(
+    spec: &TokenStream,
+    status: &TokenStream,
+    credentials: &TokenStream,
+) -> TokenStream {
     quote! {
         // This file is generated. Do not edit manually.
 
         #status
         #spec
+
+        #credentials
     }
 }
 
@@ -276,6 +284,190 @@ fn for_provider_field(path: &FieldPath) -> Result<&str, GeneratorError> {
     }
 
     Ok(field)
+}
+
+fn field_path_access(root: TokenStream, path: &FieldPath) -> Result<TokenStream, GeneratorError> {
+    path.0.split('.').try_fold(root, |access, segment| {
+        let field = field_ident(segment)?;
+        Ok(quote!(#access.#field))
+    })
+}
+
+pub fn generate_resolve_credentials(
+    ir: &ProviderIr,
+    resource_name: &ResourceName,
+    resource: &ResourceIr,
+) -> Result<TokenStream, GeneratorError> {
+    let Some(credentials) = &resource.credentials else {
+        return Ok(TokenStream::new());
+    };
+
+    let resource_ident = type_ident(&resource.kind)?;
+
+    let credential_ident = type_ident(&format!(
+        "{}Credential",
+        credentials.security_scheme.0.to_upper_camel_case(),
+    ))?;
+
+    let mut traversal = Vec::new();
+    let mut current_resource = resource;
+    let mut current_value = quote!(resource);
+    let mut current_namespace = quote!(namespace);
+
+    match &credentials.source {
+        CredentialSourceIr::SecretKeySelector { .. } => {}
+
+        CredentialSourceIr::Related { via } => {
+            for (index, relation_name) in via.iter().enumerate() {
+                let relation = current_resource
+                    .references
+                    .get(relation_name)
+                    .ok_or_else(|| {
+                        GeneratorError::UnsupportedCredential(format!(
+                            "resource {} has no relation {}",
+                            resource_name.0, relation_name,
+                        ))
+                    })?;
+
+                let target = ir.resources.get(&relation.target).ok_or_else(|| {
+                    GeneratorError::UnsupportedCredential(format!(
+                        "unknown related resource {}",
+                        relation.target.0,
+                    ))
+                })?;
+
+                let reference_access = field_path_access(current_value.clone(), &relation.from)?;
+
+                let reference_ident = syn::Ident::new(
+                    &format!("reference_{index}"),
+                    proc_macro2::Span::call_site(),
+                );
+
+                let namespace_ident = syn::Ident::new(
+                    &format!("namespace_{index}"),
+                    proc_macro2::Span::call_site(),
+                );
+
+                let api_ident =
+                    syn::Ident::new(&format!("api_{index}"), proc_macro2::Span::call_site());
+
+                let value_ident =
+                    syn::Ident::new(&format!("related_{index}"), proc_macro2::Span::call_site());
+
+                let target_module = field_ident(&relation.target.0)?;
+
+                let target_ident = type_ident(&target.kind)?;
+
+                let reference_path = &relation.from.0;
+
+                let target_type = quote! {
+                    crate::generated::#target_module::#target_ident
+                };
+
+                traversal.push(quote! {
+                    let #reference_ident =
+                        (#reference_access)
+                            .as_ref()
+                            .ok_or_else(|| {
+                                provider_core::CredentialError::MissingValue(
+                                    format!(
+                                        "resource reference {} is not set",
+                                        #reference_path,
+                                    ),
+                                )
+                            })?;
+
+                    let #namespace_ident = #reference_ident
+                        .namespace
+                        .clone()
+                        .unwrap_or_else(|| #current_namespace.clone());
+
+                    let #api_ident: kube::Api<#target_type> =
+                        kube::Api::namespaced(
+                            client.clone(),
+                            &#namespace_ident,
+                        );
+
+                    let #value_ident = #api_ident
+                        .get(&#reference_ident.name)
+                        .await?;
+                });
+
+                current_resource = target;
+                current_value = quote!(#value_ident);
+                current_namespace = quote!(#namespace_ident);
+            }
+        }
+    }
+
+    let terminal_credentials = current_resource.credentials.as_ref().ok_or_else(|| {
+        GeneratorError::UnsupportedCredential(format!(
+            "credential relation from {} ends at a resource \
+                 without credentials",
+            resource_name.0,
+        ))
+    })?;
+
+    let CredentialSourceIr::SecretKeySelector { path: secret_path } = &terminal_credentials.source
+    else {
+        return Err(GeneratorError::UnsupportedCredential(format!(
+            "credential relation from {} does not end at \
+                 direct Secret credentials",
+            resource_name.0,
+        )));
+    };
+
+    let selector_access = field_path_access(current_value, secret_path)?;
+
+    let secret_path_string = &secret_path.0;
+    let resource_kind = &resource.kind;
+
+    Ok(quote! {
+        pub async fn resolve_credentials(
+            client: &kube::Client,
+            resource: &#resource_ident,
+        ) -> Result<
+            crate::generated::client::#credential_ident,
+            core::api::CredentialError,
+        > {
+            let namespace =
+                kube::ResourceExt::namespace(resource)
+                    .ok_or_else(|| {
+                        core::api::CredentialError::MissingValue(
+                            format!(
+                                "{} has no namespace",
+                                #resource_kind,
+                            ),
+                        )
+                    })?;
+
+            #(#traversal)*
+
+            let selector = (#selector_access)
+                .as_ref()
+                .ok_or_else(|| {
+                    core::api::CredentialError::MissingValue(
+                        format!(
+                            "credential field {} is not set",
+                            #secret_path_string,
+                        ),
+                    )
+                })?;
+
+            let value = core::reference::resolve_secret_key(
+                client,
+                &#current_namespace,
+                selector,
+            )
+            .await?;
+
+            Ok(
+                crate::generated::client::#credential_ident::new(
+                    value,
+                )?
+            )
+        }
+    })
 }
 
 pub fn generate_credentials(ir: &ProviderIr) -> Result<TokenStream, GeneratorError> {

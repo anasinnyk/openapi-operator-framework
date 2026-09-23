@@ -138,3 +138,26 @@ pub struct AccountSpec {
     #[serde(flatten)]
     pub management: core::managed::ManagedResourceSpec,
 }
+pub async fn resolve_credentials(
+    client: &kube::Client,
+    resource: &Account,
+) -> Result<crate::generated::client::ApiTokenCredential, core::api::CredentialError> {
+    let namespace = kube::ResourceExt::namespace(resource)
+        .ok_or_else(|| {
+            core::api::CredentialError::MissingValue(
+                format!("{} has no namespace", "Account",),
+            )
+        })?;
+    let selector = (resource.spec.for_provider.api_token_secret_ref)
+        .as_ref()
+        .ok_or_else(|| {
+            core::api::CredentialError::MissingValue(
+                format!(
+                    "credential field {} is not set",
+                    "spec.forProvider.apiTokenSecretRef",
+                ),
+            )
+        })?;
+    let value = core::reference::resolve_secret_key(client, &namespace, selector).await?;
+    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+}
