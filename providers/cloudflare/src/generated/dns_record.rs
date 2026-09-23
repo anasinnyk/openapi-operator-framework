@@ -1,40 +1,6 @@
 #[derive(
     Clone,
     Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
-pub struct DnsRecordAtProvider {
-    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-}
-#[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
-pub struct DnsRecordStatus {
-    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
-    pub at_provider: Option<DnsRecordAtProvider>,
-    #[serde(
-        rename = "observedGeneration",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
-    pub observed_generation: Option<i64>,
-    #[serde(default)]
-    pub conditions: Vec<k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition>,
-}
-#[derive(
-    Clone,
-    Debug,
     PartialEq,
     serde::Serialize,
     serde::Deserialize,
@@ -65,6 +31,40 @@ pub struct DnsRecordSpec {
     pub for_provider: DnsRecordForProvider,
     #[serde(flatten)]
     pub management: core::managed::ManagedResourceSpec,
+}
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct DnsRecordAtProvider {
+    #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+}
+#[derive(
+    Clone,
+    Debug,
+    Default,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema
+)]
+pub struct DnsRecordStatus {
+    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
+    pub at_provider: Option<DnsRecordAtProvider>,
+    #[serde(
+        rename = "observedGeneration",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub observed_generation: Option<i64>,
+    #[serde(default)]
+    pub conditions: Vec<k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition>,
 }
 pub async fn resolve_credentials(
     client: &kube::Client,
@@ -179,4 +179,65 @@ pub async fn observe(
         exists: at_provider.is_some(),
         at_provider,
     })
+}
+pub async fn update_status(
+    client: &kube::Client,
+    resource: &DnsRecord,
+    observation: &core::reconciler::Observation,
+) -> Result<(), core::error::ReconcileError> {
+    let namespace = kube::ResourceExt::namespace(resource)
+        .ok_or_else(|| {
+            core::error::ResolveValueError::Missing("resource has no namespace".into())
+        })?;
+    let name = kube::ResourceExt::name_any(resource);
+    let at_provider: Option<DnsRecordAtProvider> = observation
+        .at_provider
+        .clone()
+        .map(serde_json::from_value)
+        .transpose()?;
+    let condition_status = if observation.exists { "True" } else { "False" };
+    let reason = if observation.exists { "Available" } else { "NotFound" };
+    let message = if observation.exists {
+        "External resource exists"
+    } else {
+        "External resource does not exist"
+    };
+    let previous_condition = resource
+        .status
+        .as_ref()
+        .and_then(|status| {
+            status.conditions.iter().find(|condition| { condition.type_ == "Ready" })
+        });
+    let last_transition_time = previous_condition
+        .filter(|condition| {
+            condition.status == condition_status && condition.reason == reason
+        })
+        .map(|condition| { condition.last_transition_time.clone() })
+        .unwrap_or_else(|| {
+            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(
+                jiff::Timestamp::now(),
+            )
+        });
+    let condition = k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition {
+        type_: "Ready".into(),
+        status: condition_status.into(),
+        reason: reason.into(),
+        message: message.into(),
+        observed_generation: resource.metadata.generation,
+        last_transition_time,
+    };
+    let status = DnsRecordStatus {
+        at_provider,
+        observed_generation: resource.metadata.generation,
+        conditions: vec![condition],
+    };
+    let patch = serde_json::json!({ "status" : status, });
+    let api: kube::Api<DnsRecord> = kube::Api::namespaced(client.clone(), &namespace);
+    api.patch_status(
+            &name,
+            &kube::api::PatchParams::default(),
+            &kube::api::Patch::Merge(&patch),
+        )
+        .await?;
+    Ok(())
 }

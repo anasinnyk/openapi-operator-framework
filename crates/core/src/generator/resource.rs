@@ -29,8 +29,10 @@ pub fn generate_resource(
     let status = generate_status(resource)?;
     let observe = generate_observe(ir, name, resource)?;
     let credentials = generate_resolve_credentials(ir, name, resource)?;
+    let update_status = generate_update_status(resource)?;
 
-    let custom_resource = generate_custom_resource(&spec, &status, &credentials, &observe);
+    let custom_resource =
+        generate_custom_resource(&[spec, status, credentials, observe, update_status]);
 
     let content = format_tokens(custom_resource)?;
 
@@ -40,20 +42,11 @@ pub fn generate_resource(
     })
 }
 
-fn generate_custom_resource(
-    spec: &TokenStream,
-    status: &TokenStream,
-    credentials: &TokenStream,
-    observe: &TokenStream,
-) -> TokenStream {
+fn generate_custom_resource(tokens: &[TokenStream]) -> TokenStream {
     quote! {
         // This file is generated. Do not edit manually.
 
-        #status
-        #spec
-
-        #credentials
-        #observe
+        #(#tokens)*
     }
 }
 
@@ -412,6 +405,116 @@ fn generate_spec(ir: &ProviderIr, resource: &ResourceIr) -> Result<TokenStream, 
             #[serde(flatten)]
             pub management:
                 core::managed::ManagedResourceSpec,
+        }
+    })
+}
+
+pub fn generate_update_status(resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
+    let resource_ident = type_ident(&resource.kind)?;
+    let status_ident = type_ident(&format!("{}Status", resource.kind))?;
+    let at_provider_ident = type_ident(&format!("{}AtProvider", resource.kind))?;
+
+    Ok(quote! {
+        pub async fn update_status(
+            client: &kube::Client,
+            resource: &#resource_ident,
+            observation: &core::reconciler::Observation,
+        ) -> Result<(), core::error::ReconcileError> {
+            let namespace =
+                kube::ResourceExt::namespace(resource)
+                    .ok_or_else(|| {
+                        core::error::ResolveValueError::Missing(
+                            "resource has no namespace".into(),
+                        )
+                    })?;
+
+            let name =
+                kube::ResourceExt::name_any(resource);
+
+            let at_provider: Option<#at_provider_ident> =
+                observation
+                    .at_provider
+                    .clone()
+                    .map(serde_json::from_value)
+                    .transpose()?;
+
+            let condition_status = if observation.exists {
+                "True"
+            } else {
+                "False"
+            };
+
+            let reason = if observation.exists {
+                "Available"
+            } else {
+                "NotFound"
+            };
+
+            let message = if observation.exists {
+                "External resource exists"
+            } else {
+                "External resource does not exist"
+            };
+
+            let previous_condition = resource
+                .status
+                .as_ref()
+                .and_then(|status| {
+                    status.conditions.iter().find(|condition| {
+                        condition.type_ == "Ready"
+                    })
+                });
+
+            let last_transition_time = previous_condition
+                .filter(|condition| {
+                    condition.status == condition_status
+                        && condition.reason == reason
+                })
+                .map(|condition| {
+                    condition.last_transition_time.clone()
+                })
+                .unwrap_or_else(|| {
+                    k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(
+                        jiff::Timestamp::now(),
+                    )
+                });
+
+            let condition =
+                k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition {
+                    type_: "Ready".into(),
+                    status: condition_status.into(),
+                    reason: reason.into(),
+                    message: message.into(),
+                    observed_generation:
+                        resource.metadata.generation,
+                    last_transition_time,
+                };
+
+            let status = #status_ident {
+                at_provider,
+                observed_generation:
+                    resource.metadata.generation,
+                conditions: vec![condition],
+            };
+
+            let patch = serde_json::json!({
+                "status": status,
+            });
+
+            let api: kube::Api<#resource_ident> =
+                kube::Api::namespaced(
+                    client.clone(),
+                    &namespace,
+                );
+
+            api.patch_status(
+                &name,
+                &kube::api::PatchParams::default(),
+                &kube::api::Patch::Merge(&patch),
+            )
+            .await?;
+
+            Ok(())
         }
     })
 }

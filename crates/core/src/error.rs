@@ -58,4 +58,7 @@ pub enum ReconcileError {
 
     #[error("failed to serialize provider response: {0}")]
     Serialization(#[from] serde_json::Error),
+
+    #[error("Kubernetes API request failed: {0}")]
+    Kubernetes(#[from] kube::Error),
 }
