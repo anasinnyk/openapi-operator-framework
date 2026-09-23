@@ -32,6 +32,7 @@ pub fn generate_resource(
         generate_resolve_credentials(ir, name, resource)?,
         generate_update_status(resource)?,
         generate_reconciler(resource)?,
+        generate_run_controller(resource)?,
     ]);
 
     let content = format_tokens(custom_resource)?;
@@ -53,6 +54,60 @@ fn generate_custom_resource(tokens: &[TokenStream]) -> TokenStream {
 pub struct GeneratedPathParameters {
     pub bindings: Vec<TokenStream>,
     pub arguments: Vec<TokenStream>,
+}
+
+pub fn generate_run_controller(resource: &ResourceIr) -> Result<TokenStream, GeneratorError> {
+    let resource_ident = type_ident(&resource.kind)?;
+    let controller_name = &resource.kind;
+
+    Ok(quote! {
+        pub async fn run_controller(
+            context: std::sync::Arc<
+                core::reconciler::ControllerContext<
+                    crate::generated::client::ProviderClient
+                >
+            >,
+        ) {
+            use futures::StreamExt as _;
+
+            let api: kube::Api<#resource_ident> =
+                kube::Api::all(
+                    context.kube_client.clone(),
+                );
+
+            kube::runtime::Controller::new(
+                api,
+                kube::runtime::watcher::Config::default(),
+            )
+            .shutdown_on_signal()
+            .run(
+                reconcile,
+                error_policy,
+                context,
+            )
+            .for_each(|result| async move {
+                match result {
+                    Ok((object, action)) => {
+                        tracing::debug!(
+                            resource = #controller_name,
+                            ?object,
+                            ?action,
+                            "reconciliation completed",
+                        );
+                    }
+
+                    Err(error) => {
+                        tracing::error!(
+                            resource = #controller_name,
+                            ?error,
+                            "reconciliation failed",
+                        );
+                    }
+                }
+            })
+            .await;
+        }
+    })
 }
 
 pub fn generate_path_parameters(

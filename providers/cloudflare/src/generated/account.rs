@@ -280,3 +280,30 @@ pub fn error_policy(
 ) -> kube::runtime::controller::Action {
     kube::runtime::controller::Action::requeue(std::time::Duration::from_secs(30))
 }
+pub async fn run_controller(
+    context: std::sync::Arc<
+        core::reconciler::ControllerContext<crate::generated::client::ProviderClient>,
+    >,
+) {
+    use futures::StreamExt as _;
+    let api: kube::Api<Account> = kube::Api::all(context.kube_client.clone());
+    kube::runtime::Controller::new(api, kube::runtime::watcher::Config::default())
+        .shutdown_on_signal()
+        .run(reconcile, error_policy, context)
+        .for_each(|result| async move {
+            match result {
+                Ok((object, action)) => {
+                    tracing::debug!(
+                        resource = "Account", ? object, ? action,
+                        "reconciliation completed",
+                    );
+                }
+                Err(error) => {
+                    tracing::error!(
+                        resource = "Account", ? error, "reconciliation failed",
+                    );
+                }
+            }
+        })
+        .await;
+}

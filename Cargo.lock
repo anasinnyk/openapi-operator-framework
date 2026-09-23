@@ -640,6 +640,7 @@ dependencies = [
  "anyhow",
  "clap",
  "enumset",
+ "futures",
  "heck",
  "jiff",
  "k8s-openapi",
@@ -655,6 +656,7 @@ dependencies = [
  "serde_yaml",
  "syn 3.0.6",
  "thiserror",
+ "tracing",
 ]
 
 [[package]]
