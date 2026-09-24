@@ -23,6 +23,19 @@ actions:
             type: secret_key_selector
             path: spec.forProvider.apiTokenSecretRef
 
+        fields:
+          mode: explicit
+          forProvider:
+            - name
+            - settings
+          atProvider:
+            - id
+            - name
+            - type
+            - created_on
+            - managed_by
+            - settings
+
   - target: $.paths['/accounts/{account_id}'].get
     update:
       x-kube-operation:

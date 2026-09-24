@@ -14,6 +14,9 @@ pub struct ResourceReference {
 
 pub type SecretReference = SecretKeySelector;
 
+/// # Errors
+///
+/// Can return errors related to kubernets secret references
 pub async fn resolve_secret_key(
     client: &kube::Client,
     namespace: &str,
@@ -53,6 +56,9 @@ pub async fn resolve_secret_key(
     })
 }
 
+/// # Errors
+///
+/// Can return error when field is not resolve
 pub fn resolve_field_value(
     resource: &impl serde::Serialize,
     path: &str,

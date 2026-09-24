@@ -29,6 +29,27 @@ actions:
             type: related
             via: [account]
 
+        fields:
+          mode: explicit
+          forProvider:
+            - name
+            - production_branch
+            - build_config
+            - deployment_configs
+            - source
+          atProvider:
+            - id
+            - name
+            - created_on
+            - domains
+            - framework
+            - framework_version
+            - preview_script_name
+            - production_script_name
+            - production_branch
+            - subdomain
+            - uses_functions
+
   - target: $.paths['/accounts/{account_id}/pages/projects/{project_name}'].get
     update:
       x-kube-operation:

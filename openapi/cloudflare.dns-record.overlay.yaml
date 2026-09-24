@@ -29,6 +29,35 @@ actions:
             type: related
             via: [zone, account]
 
+        fields:
+          mode: explicit
+          forProvider:
+            - type
+            - name
+            - content
+            - data
+            - ttl
+            - priority
+            - proxied
+            - comment
+            - tags
+            - settings
+          atProvider:
+            - id
+            - type
+            - name
+            - content
+            - data
+            - ttl
+            - priority
+            - proxied
+            - proxiable
+            - comment
+            - tags
+            - settings
+            - created_on
+            - modified_on
+
   - target: $.paths['/zones/{zone_id}/dns_records/{dns_record_id}'].get
     update:
       x-kube-operation:

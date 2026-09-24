@@ -121,7 +121,7 @@ pub fn generate_path_parameters(
     for (parameter_name, expression) in &operation.path_parameters {
         let parameter_ident = field_ident(parameter_name)?;
 
-        let value = generate_value_expr(ir, resource_name, quote!(resource), expression)?;
+        let value = generate_value_expr(ir, resource_name, &quote!(resource), expression)?;
 
         bindings.push(quote! {
             let #parameter_ident = (#value)
@@ -211,7 +211,7 @@ pub fn generate_observe(
 fn generate_value_expr(
     ir: &ProviderIr,
     resource_name: &ResourceName,
-    resource_value: TokenStream,
+    resource_value: &TokenStream,
     expression: &ValueExpr,
 ) -> Result<TokenStream, GeneratorError> {
     match expression {
@@ -240,7 +240,7 @@ fn generate_value_expr(
         ValueExpr::Coalesce { values } => {
             let values = values
                 .iter()
-                .map(|value| generate_value_expr(ir, resource_name, resource_value.clone(), value))
+                .map(|value| generate_value_expr(ir, resource_name, &resource_value.clone(), value))
                 .collect::<Result<Vec<_>, _>>()?;
 
             Ok(quote! {
@@ -262,7 +262,7 @@ fn generate_value_expr(
         }
 
         ValueExpr::RelatedIdentifier { via, name } => {
-            generate_related_identifier(ir, resource_name, resource_value, via, name)
+            generate_related_identifier(ir, resource_name, &resource_value.clone(), via, name)
         }
     }
 }
@@ -270,13 +270,13 @@ fn generate_value_expr(
 fn generate_related_identifier(
     ir: &ProviderIr,
     resource_name: &ResourceName,
-    resource_value: TokenStream,
+    resource_value: &TokenStream,
     via: &[String],
     identifier_name: &str,
 ) -> Result<TokenStream, GeneratorError> {
     let mut current_resource_name = resource_name;
     let mut current_resource = ir.resources.get(resource_name).ok_or_else(|| {
-        GeneratorError::InvalidIr(format!("unknown resource {}", resource_name.0,))
+        GeneratorError::InvalidIr(format!("unknown resource {}", resource_name.0))
     })?;
 
     let mut current_value = resource_value.clone();
@@ -295,7 +295,7 @@ fn generate_related_identifier(
             })?;
 
         let target = ir.resources.get(&relation.target).ok_or_else(|| {
-            GeneratorError::InvalidIr(format!("unknown resource {}", relation.target.0,))
+            GeneratorError::InvalidIr(format!("unknown resource {}", relation.target.0))
         })?;
 
         let reference_access = field_path_access(current_value.clone(), &relation.from)?;
@@ -358,7 +358,7 @@ fn generate_related_identifier(
     let identifier_value = generate_value_expr(
         ir,
         current_resource_name,
-        current_value,
+        &current_value,
         identifier_expression,
     )?;
 

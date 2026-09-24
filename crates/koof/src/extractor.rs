@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ir::{
-    AdditionalPropertiesIr, ApiKeyLocationIr, CredentialsIr, FieldIr, HttpMethod, LifecycleIr,
-    OperationId, OperationIr, ProviderIr, ReferenceIr, ResourceIr, ResourceName, SchemaIr,
-    SchemaName, SecuritySchemeIr, SecuritySchemeName, ValueExpr,
+    AdditionalPropertiesIr, ApiKeyLocationIr, CredentialsIr, FieldIr, FieldSelectionIr, HttpMethod,
+    LifecycleIr, OperationId, OperationIr, ProviderIr, ReferenceIr, ResourceIr, ResourceName,
+    SchemaIr, SchemaName, SecuritySchemeIr, SecuritySchemeName, ValueExpr,
 };
 use serde::Deserialize;
 use serde_json::{Map, Value};
@@ -16,6 +16,7 @@ struct ResourceExtension {
     name: ResourceName,
     api_version: String,
     kind: String,
+    fields: Option<FieldSelectionIr>,
     #[serde(default)]
     identifiers: BTreeMap<String, ValueExpr>,
     #[serde(default)]
@@ -75,6 +76,7 @@ pub fn extract(openapi: &Value) -> Result<ProviderIr, LoaderError> {
                     identifiers: draft.extension.identifiers,
                     references: draft.extension.references,
                     credentials: draft.extension.credentials,
+                    field_selection: draft.extension.fields.unwrap_or_default(),
                     lifecycle: LifecycleIr {
                         observe,
                         create: draft.lifecycle.create,
@@ -482,11 +484,10 @@ pub fn extract_response_body(
 
     successful.sort_by_key(|(status, _)| *status);
 
-    // OpenAPI також дозволяє pattern response "2XX".
-    if successful.is_empty() {
-        if let Some(response) = responses.get("2XX") {
-            successful.push((200, response));
-        }
+    if successful.is_empty()
+        && let Some(response) = responses.get("2XX")
+    {
+        successful.push((200, response));
     }
 
     if successful.is_empty() {

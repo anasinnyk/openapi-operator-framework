@@ -17,6 +17,7 @@ impl<T> ApiRequest<T> {
         }
     }
 
+    #[must_use]
     pub fn with_credentials(mut self, credentials: &impl ApiCredential) -> Self {
         self.request = credentials.apply(self.request);
         self

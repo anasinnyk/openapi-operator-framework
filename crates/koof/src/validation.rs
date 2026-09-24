@@ -11,6 +11,10 @@ pub struct ValidationError {
     pub message: String,
 }
 
+/// # Errors
+///
+/// All errors combile to Vec for `ValidationError`
+///
 pub fn validate(ir: &ProviderIr) -> Result<(), Vec<ValidationError>> {
     let mut errors = Vec::new();
     let mut kinds = BTreeMap::new();

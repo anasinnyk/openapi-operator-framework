@@ -21,6 +21,7 @@ pub struct ResourceName(pub String);
 pub struct OperationId(pub String);
 
 impl OperationId {
+    #[must_use]
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -32,6 +33,32 @@ impl AsRef<str> for OperationId {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum FieldSelectionModeIr {
+    All,
+    Explicit,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FieldSelectionIr {
+    pub mode: FieldSelectionModeIr,
+    #[serde(default)]
+    pub for_provider: Vec<FieldPath>,
+    #[serde(default)]
+    pub at_provider: Vec<FieldPath>,
+}
+
+impl Default for FieldSelectionIr {
+    fn default() -> Self {
+        Self {
+            mode: FieldSelectionModeIr::All,
+            for_provider: Vec::new(),
+            at_provider: Vec::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ResourceIr {
     pub api_version: String,
@@ -39,6 +66,7 @@ pub struct ResourceIr {
     pub spec_schema: SchemaName,
     #[serde(default)]
     pub identifiers: BTreeMap<String, ValueExpr>,
+    pub field_selection: FieldSelectionIr,
     #[serde(default)]
     pub references: BTreeMap<String, ReferenceIr>,
     pub credentials: Option<CredentialsIr>,
@@ -127,6 +155,7 @@ pub enum HttpMethod {
 }
 
 impl HttpMethod {
+    #[must_use]
     pub fn as_str(&self) -> &str {
         match self {
             HttpMethod::GET => "get",

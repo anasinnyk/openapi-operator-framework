@@ -10,7 +10,7 @@ use std::{
 #[command(name = "provider-generator")]
 #[command(about = "Generate Kubernetes provider code from OpenAPI")]
 pub struct Args {
-    /// Source OpenAPI YAML or JSON file.
+    /// Source `OpenAPI` YAML or JSON file.
     #[arg(short = 'i', long, value_name = "FILE")]
     openapi: PathBuf,
 

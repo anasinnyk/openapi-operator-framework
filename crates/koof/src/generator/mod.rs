@@ -5,6 +5,9 @@ mod naming;
 mod resource;
 mod schema;
 
+/// # Errors
+///
+/// Return errors when we cannot generate a controller/mod/client
 pub fn generate(ir: &ProviderIr) -> Result<Vec<resource::GeneratedFile>, errors::GeneratorError> {
     let mut files = ir
         .resources

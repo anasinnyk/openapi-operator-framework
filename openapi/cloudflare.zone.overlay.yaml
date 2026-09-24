@@ -29,6 +29,30 @@ actions:
             type: related
             via: [account]
 
+        fields:
+          mode: explicit
+          forProvider:
+            - name
+            - type
+            - paused
+            - vanity_name_servers
+          atProvider:
+            - id
+            - name
+            - type
+            - status
+            - paused
+            - activated_on
+            - created_on
+            - modified_on
+            - development_mode
+            - name_servers
+            - original_name_servers
+            - original_registrar
+            - original_dnshost
+            - verification_key
+            - vanity_name_servers
+
   - target: $.paths['/zones/{zone_id}'].get
     update:
       x-kube-operation:
