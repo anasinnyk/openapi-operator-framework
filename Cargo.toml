@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["providers/cloudflare", "crates/core"]
+members = ["crates/providers/cloudflare", "crates/koof"]
 
 [workspace.lints.rust]
 warnings = { level = "deny", priority = -1 }
