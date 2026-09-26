@@ -7,7 +7,7 @@ use std::{
 };
 
 #[derive(Debug, Parser)]
-#[command(name = "provider-generator")]
+#[command(name = "koof-gen")]
 #[command(about = "Generate Kubernetes provider code from OpenAPI")]
 pub struct Args {
     /// Source `OpenAPI` YAML or JSON file.

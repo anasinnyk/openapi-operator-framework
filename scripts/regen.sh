@@ -6,7 +6,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 output="${1:-$root/crates/providers/cloudflare}"
 
-cargo run --quiet --manifest-path "$root/Cargo.toml" -p koof -- \
+cargo run --quiet --manifest-path "$root/Cargo.toml" -p koof-gen -- \
   --openapi "$root/openapi/cloudflare.yaml" \
   --overlay "$root/openapi/cloudflare.account.overlay.yaml" \
   --overlay "$root/openapi/cloudflare.zone.overlay.yaml" \

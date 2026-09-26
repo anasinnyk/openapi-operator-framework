@@ -1313,26 +1313,32 @@ dependencies = [
 name = "koof"
 version = "0.1.0"
 dependencies = [
+ "k8s-openapi",
+ "kube",
+ "reqwest",
+ "schemars",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
+name = "koof-gen"
+version = "0.1.0"
+dependencies = [
  "anyhow",
  "clap",
  "enumset",
- "futures",
  "heck",
- "jiff",
- "k8s-openapi",
- "kube",
  "prettyplease",
  "proc-macro2",
  "quote",
- "reqwest",
  "roas-overlay",
- "schemars",
  "serde",
  "serde_json",
  "serde_yaml",
  "syn 3.0.6",
  "thiserror",
- "tracing",
 ]
 
 [[package]]
