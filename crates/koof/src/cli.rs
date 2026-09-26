@@ -23,6 +23,12 @@ pub struct Args {
     output: PathBuf,
 }
 
+/// Runs the generator CLI.
+///
+/// # Errors
+///
+/// Returns an error when loading, validation or generation fails, or a generated file
+/// cannot be written.
 pub fn run() -> Result<()> {
     let args = Args::parse();
 

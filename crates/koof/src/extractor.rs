@@ -55,6 +55,13 @@ struct ResourceDraft {
     lifecycle: LifecycleDraft,
 }
 
+/// Builds a [`ProviderIr`] from an `OpenAPI` document with overlays already applied.
+///
+/// # Errors
+///
+/// Returns [`LoaderError`] when an `x-kube-*` extension is malformed, a resource has no
+/// observe operation or duplicate lifecycle operations, or the referenced schemas and
+/// security schemes are invalid.
 pub fn extract(openapi: &Value) -> Result<ProviderIr, LoaderError> {
     let mut resources = extract_resources(openapi)?;
     let operations = extract_operations(openapi, &mut resources)?;
@@ -280,7 +287,7 @@ fn ir_error(message: impl Into<String>) -> LoaderError {
     LoaderError::Ir(message.into())
 }
 
-pub fn extract_schemas(openapi: &Value) -> Result<BTreeMap<SchemaName, SchemaIr>, LoaderError> {
+fn extract_schemas(openapi: &Value) -> Result<BTreeMap<SchemaName, SchemaIr>, LoaderError> {
     let schemas = openapi
         .pointer("/components/schemas")
         .and_then(Value::as_object)
@@ -440,7 +447,7 @@ fn extract_object(value: &Value, location: &str) -> Result<SchemaIr, LoaderError
     })
 }
 
-pub fn extract_request_body(
+fn extract_request_body(
     openapi: &Value,
     operation: &Value,
     location: &str,
@@ -463,7 +470,7 @@ pub fn extract_request_body(
     )?))
 }
 
-pub fn extract_response_body(
+fn extract_response_body(
     openapi: &Value,
     operation: &Value,
     location: &str,
@@ -578,7 +585,7 @@ fn resolve_local_reference<'a>(
     Ok(current)
 }
 
-pub fn extract_security_schemes(
+fn extract_security_schemes(
     openapi: &serde_json::Value,
 ) -> Result<BTreeMap<SecuritySchemeName, SecuritySchemeIr>, LoaderError> {
     let Some(schemes) = openapi

@@ -1,18 +1,20 @@
 //! This file is generated. Do not edit manually.
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#![allow(clippy::pedantic)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesBuildConfig {
     ///Enable build caching for the project.
-    #[serde(rename = "build_caching", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "build_caching",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub build_caching: Option<bool>,
     ///Command used to build project.
-    #[serde(rename = "build_command", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "build_command",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub build_command: Option<String>,
     ///Assets output directory of the build.
     #[serde(
@@ -45,14 +47,7 @@ pub struct PagesBuildConfig {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderCanonicalDeploymentDeploymentTriggerMetadata {
     ///Where the trigger happened.
     #[serde(rename = "branch")]
@@ -73,14 +68,7 @@ pub struct PagesProjectForProviderCanonicalDeploymentDeploymentTriggerMetadata {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderCanonicalDeploymentDeploymentTrigger {
     ///Additional info about the trigger.
     #[serde(rename = "metadata")]
@@ -95,14 +83,7 @@ pub struct PagesProjectForProviderCanonicalDeploymentDeploymentTrigger {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesPlainTextEnvVar {
     #[serde(rename = "type")]
     pub r#type: String,
@@ -116,14 +97,7 @@ pub struct PagesPlainTextEnvVar {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesSecretTextEnvVar {
     #[serde(rename = "type")]
     pub r#type: String,
@@ -137,46 +111,22 @@ pub struct PagesSecretTextEnvVar {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(untagged)]
 pub enum PagesEnvVarsAdditionalProperty {
     Variant1(PagesPlainTextEnvVar),
     Variant2(PagesSecretTextEnvVar),
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesEnvVars {
     #[serde(
         flatten,
         default,
         skip_serializing_if = "std::collections::BTreeMap::is_empty"
     )]
-    pub additional_properties: std::collections::BTreeMap<
-        String,
-        PagesEnvVarsAdditionalProperty,
-    >,
+    pub additional_properties: std::collections::BTreeMap<String, PagesEnvVarsAdditionalProperty>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesStage {
     ///When the stage ended.
     #[serde(rename = "ended_on", default, skip_serializing_if = "Option::is_none")]
@@ -185,7 +135,11 @@ pub struct PagesStage {
     #[serde(rename = "name")]
     pub name: String,
     ///When the stage started.
-    #[serde(rename = "started_on", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "started_on",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub started_on: Option<String>,
     ///State of the current stage.
     #[serde(rename = "status")]
@@ -198,18 +152,11 @@ pub struct PagesStage {
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
 pub type PagesProjectName = String;
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesSourceConfig {
     /**Whether to enable automatic deployments when pushing to the source repository.
-When disabled, no deployments (production or preview) will be triggered automatically.
-*/
+    When disabled, no deployments (production or preview) will be triggered automatically.
+    */
     #[serde(rename = "deployments_enabled")]
     pub deployments_enabled: bool,
     ///The owner of the repository.
@@ -255,14 +202,7 @@ When disabled, no deployments (production or preview) will be triggered automati
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesSource {
     #[serde(rename = "config")]
     pub config: PagesSourceConfig,
@@ -276,14 +216,7 @@ pub struct PagesSource {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderCanonicalDeployment {
     ///A list of alias URLs pointing to this deployment.
     #[serde(rename = "aliases", default, skip_serializing_if = "Option::is_none")]
@@ -321,7 +254,11 @@ pub struct PagesProjectForProviderCanonicalDeployment {
     #[serde(rename = "short_id")]
     pub short_id: String,
     ///Why the deployment was skipped.
-    #[serde(rename = "skip_reason", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "skip_reason",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub skip_reason: Option<String>,
     #[serde(rename = "source")]
     pub source: PagesSource,
@@ -332,17 +269,14 @@ pub struct PagesProjectForProviderCanonicalDeployment {
     #[serde(rename = "url")]
     pub url: String,
     ///Whether the deployment uses functions.
-    #[serde(rename = "uses_functions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "uses_functions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub uses_functions: Option<bool>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewAiBindingsAdditionalProperty {
     #[serde(rename = "project_id")]
     pub project_id: String,
@@ -353,14 +287,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewAiBindingsAdditionalPr
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewAiBindings {
     #[serde(
         flatten,
@@ -372,15 +299,9 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewAiBindings {
         PagesProjectForProviderDeploymentConfigsPreviewAiBindingsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
-pub struct PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDatasetsAdditionalProperty {
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDatasetsAdditionalProperty
+{
     ///Name of the dataset.
     #[serde(rename = "dataset")]
     pub dataset: String,
@@ -391,14 +312,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDataset
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDatasets {
     #[serde(
         flatten,
@@ -410,14 +324,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDataset
         PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDatasetsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewBrowsersAdditionalProperty {
     #[serde(
         flatten,
@@ -426,14 +333,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewBrowsersAdditionalProp
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewBrowsers {
     #[serde(
         flatten,
@@ -445,14 +345,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewBrowsers {
         PagesProjectForProviderDeploymentConfigsPreviewBrowsersAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewD1DatabasesAdditionalProperty {
     ///UUID of the D1 database.
     #[serde(rename = "id")]
@@ -464,14 +357,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewD1DatabasesAdditionalP
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewD1Databases {
     #[serde(
         flatten,
@@ -483,15 +369,9 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewD1Databases {
         PagesProjectForProviderDeploymentConfigsPreviewD1DatabasesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
-pub struct PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespacesAdditionalProperty {
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespacesAdditionalProperty
+{
     ///ID of the Durable Object namespace.
     #[serde(rename = "namespace_id")]
     pub namespace_id: String,
@@ -502,14 +382,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespace
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespaces {
     #[serde(
         flatten,
@@ -521,14 +394,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespace
         PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespacesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindingsAdditionalProperty {
     #[serde(rename = "id")]
     pub id: String,
@@ -539,14 +405,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindingsAddi
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindings {
     #[serde(
         flatten,
@@ -558,14 +417,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindings {
         PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindingsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewKvNamespacesAdditionalProperty {
     ///ID of the KV namespace.
     #[serde(rename = "namespace_id")]
@@ -577,14 +429,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewKvNamespacesAdditional
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewKvNamespaces {
     #[serde(
         flatten,
@@ -596,14 +441,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewKvNamespaces {
         PagesProjectForProviderDeploymentConfigsPreviewKvNamespacesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewLimits {
     ///CPU time limit in milliseconds.
     #[serde(rename = "cpu_ms")]
@@ -615,14 +453,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewLimits {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificatesAdditionalProperty {
     #[serde(rename = "certificate_id")]
     pub certificate_id: String,
@@ -633,14 +464,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificatesAdditi
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificates {
     #[serde(
         flatten,
@@ -652,14 +476,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificates {
         PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificatesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewPlacement {
     ///Placement mode.
     #[serde(rename = "mode")]
@@ -671,14 +488,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewPlacement {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewQueueProducersAdditionalProperty {
     ///Name of the Queue.
     #[serde(rename = "name")]
@@ -690,14 +500,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewQueueProducersAddition
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewQueueProducers {
     #[serde(
         flatten,
@@ -709,17 +512,14 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewQueueProducers {
         PagesProjectForProviderDeploymentConfigsPreviewQueueProducersAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewR2BucketsAdditionalProperty {
     ///Jurisdiction of the R2 bucket.
-    #[serde(rename = "jurisdiction", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "jurisdiction",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub jurisdiction: Option<String>,
     ///Name of the R2 bucket.
     #[serde(rename = "name")]
@@ -731,14 +531,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewR2BucketsAdditionalPro
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewR2Buckets {
     #[serde(
         flatten,
@@ -750,17 +543,14 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewR2Buckets {
         PagesProjectForProviderDeploymentConfigsPreviewR2BucketsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewServicesAdditionalProperty {
     ///The entrypoint to bind to.
-    #[serde(rename = "entrypoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "entrypoint",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub entrypoint: Option<String>,
     ///The Service environment.
     #[serde(rename = "environment")]
@@ -775,14 +565,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewServicesAdditionalProp
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewServices {
     #[serde(
         flatten,
@@ -794,14 +577,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewServices {
         PagesProjectForProviderDeploymentConfigsPreviewServicesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindingsAdditionalProperty {
     #[serde(rename = "index_name")]
     pub index_name: String,
@@ -812,14 +588,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindingsAddit
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindings {
     #[serde(
         flatten,
@@ -831,17 +600,14 @@ pub struct PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindings {
         PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindingsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsPreview {
     ///Constellation bindings used for Pages Functions.
-    #[serde(rename = "ai_bindings", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ai_bindings",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ai_bindings: Option<PagesProjectForProviderDeploymentConfigsPreviewAiBindings>,
     ///Whether to always use the latest compatibility date for Pages Functions.
     #[serde(rename = "always_use_latest_compatibility_date")]
@@ -852,9 +618,8 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub analytics_engine_datasets: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDatasets,
-    >,
+    pub analytics_engine_datasets:
+        Option<PagesProjectForProviderDeploymentConfigsPreviewAnalyticsEngineDatasets>,
     ///Browser bindings used for Pages Functions.
     #[serde(rename = "browsers", default, skip_serializing_if = "Option::is_none")]
     pub browsers: Option<PagesProjectForProviderDeploymentConfigsPreviewBrowsers>,
@@ -868,7 +633,11 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
     #[serde(rename = "compatibility_flags")]
     pub compatibility_flags: Vec<String>,
     ///D1 databases used for Pages Functions.
-    #[serde(rename = "d1_databases", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "d1_databases",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub d1_databases: Option<PagesProjectForProviderDeploymentConfigsPreviewD1Databases>,
     ///Durable Object namespaces used for Pages Functions.
     #[serde(
@@ -876,9 +645,8 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub durable_object_namespaces: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespaces,
-    >,
+    pub durable_object_namespaces:
+        Option<PagesProjectForProviderDeploymentConfigsPreviewDurableObjectNamespaces>,
     #[serde(rename = "env_vars")]
     pub env_vars: PagesEnvVars,
     ///Whether to fail open when the deployment config cannot be applied.
@@ -890,14 +658,15 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub hyperdrive_bindings: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindings,
-    >,
+    pub hyperdrive_bindings:
+        Option<PagesProjectForProviderDeploymentConfigsPreviewHyperdriveBindings>,
     ///KV namespaces used for Pages Functions.
-    #[serde(rename = "kv_namespaces", default, skip_serializing_if = "Option::is_none")]
-    pub kv_namespaces: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewKvNamespaces,
-    >,
+    #[serde(
+        rename = "kv_namespaces",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub kv_namespaces: Option<PagesProjectForProviderDeploymentConfigsPreviewKvNamespaces>,
     ///Limits for Pages Functions.
     #[serde(rename = "limits", default, skip_serializing_if = "Option::is_none")]
     pub limits: Option<PagesProjectForProviderDeploymentConfigsPreviewLimits>,
@@ -907,9 +676,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub mtls_certificates: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificates,
-    >,
+    pub mtls_certificates: Option<PagesProjectForProviderDeploymentConfigsPreviewMtlsCertificates>,
     ///Placement setting used for Pages Functions.
     #[serde(rename = "placement", default, skip_serializing_if = "Option::is_none")]
     pub placement: Option<PagesProjectForProviderDeploymentConfigsPreviewPlacement>,
@@ -919,11 +686,13 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub queue_producers: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewQueueProducers,
-    >,
+    pub queue_producers: Option<PagesProjectForProviderDeploymentConfigsPreviewQueueProducers>,
     ///R2 buckets used for Pages Functions.
-    #[serde(rename = "r2_buckets", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "r2_buckets",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub r2_buckets: Option<PagesProjectForProviderDeploymentConfigsPreviewR2Buckets>,
     ///Services used for Pages Functions.
     #[serde(rename = "services", default, skip_serializing_if = "Option::is_none")]
@@ -937,9 +706,8 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub vectorize_bindings: Option<
-        PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindings,
-    >,
+    pub vectorize_bindings:
+        Option<PagesProjectForProviderDeploymentConfigsPreviewVectorizeBindings>,
     ///Hash of the Wrangler configuration used for the deployment.
     #[serde(
         rename = "wrangler_config_hash",
@@ -948,14 +716,7 @@ pub struct PagesProjectForProviderDeploymentConfigsPreview {
     )]
     pub wrangler_config_hash: Option<String>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionAiBindingsAdditionalProperty {
     #[serde(rename = "project_id")]
     pub project_id: String,
@@ -966,14 +727,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionAiBindingsAdditiona
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionAiBindings {
     #[serde(
         flatten,
@@ -985,15 +739,9 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionAiBindings {
         PagesProjectForProviderDeploymentConfigsProductionAiBindingsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
-pub struct PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineDatasetsAdditionalProperty {
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineDatasetsAdditionalProperty
+{
     ///Name of the dataset.
     #[serde(rename = "dataset")]
     pub dataset: String,
@@ -1004,14 +752,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineData
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineDatasets {
     #[serde(
         flatten,
@@ -1023,14 +764,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineData
         PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineDatasetsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionBrowsersAdditionalProperty {
     #[serde(
         flatten,
@@ -1039,14 +773,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionBrowsersAdditionalP
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionBrowsers {
     #[serde(
         flatten,
@@ -1058,14 +785,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionBrowsers {
         PagesProjectForProviderDeploymentConfigsProductionBrowsersAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionD1DatabasesAdditionalProperty {
     ///UUID of the D1 database.
     #[serde(rename = "id")]
@@ -1077,14 +797,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionD1DatabasesAddition
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionD1Databases {
     #[serde(
         flatten,
@@ -1096,15 +809,9 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionD1Databases {
         PagesProjectForProviderDeploymentConfigsProductionD1DatabasesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
-pub struct PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamespacesAdditionalProperty {
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamespacesAdditionalProperty
+{
     ///ID of the Durable Object namespace.
     #[serde(rename = "namespace_id")]
     pub namespace_id: String,
@@ -1115,14 +822,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamesp
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamespaces {
     #[serde(
         flatten,
@@ -1134,14 +834,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamesp
         PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamespacesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindingsAdditionalProperty {
     #[serde(rename = "id")]
     pub id: String,
@@ -1152,14 +845,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindingsA
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindings {
     #[serde(
         flatten,
@@ -1171,14 +857,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindings 
         PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindingsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionKvNamespacesAdditionalProperty {
     ///ID of the KV namespace.
     #[serde(rename = "namespace_id")]
@@ -1190,14 +869,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionKvNamespacesAdditio
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionKvNamespaces {
     #[serde(
         flatten,
@@ -1209,14 +881,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionKvNamespaces {
         PagesProjectForProviderDeploymentConfigsProductionKvNamespacesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionLimits {
     ///CPU time limit in milliseconds.
     #[serde(rename = "cpu_ms")]
@@ -1228,14 +893,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionLimits {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionMtlsCertificatesAdditionalProperty {
     #[serde(rename = "certificate_id")]
     pub certificate_id: String,
@@ -1246,14 +904,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionMtlsCertificatesAdd
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionMtlsCertificates {
     #[serde(
         flatten,
@@ -1265,14 +916,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionMtlsCertificates {
         PagesProjectForProviderDeploymentConfigsProductionMtlsCertificatesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionPlacement {
     ///Placement mode.
     #[serde(rename = "mode")]
@@ -1284,14 +928,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionPlacement {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionQueueProducersAdditionalProperty {
     ///Name of the Queue.
     #[serde(rename = "name")]
@@ -1303,14 +940,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionQueueProducersAddit
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionQueueProducers {
     #[serde(
         flatten,
@@ -1322,17 +952,14 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionQueueProducers {
         PagesProjectForProviderDeploymentConfigsProductionQueueProducersAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionR2BucketsAdditionalProperty {
     ///Jurisdiction of the R2 bucket.
-    #[serde(rename = "jurisdiction", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "jurisdiction",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub jurisdiction: Option<String>,
     ///Name of the R2 bucket.
     #[serde(rename = "name")]
@@ -1344,14 +971,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionR2BucketsAdditional
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionR2Buckets {
     #[serde(
         flatten,
@@ -1363,17 +983,14 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionR2Buckets {
         PagesProjectForProviderDeploymentConfigsProductionR2BucketsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionServicesAdditionalProperty {
     ///The entrypoint to bind to.
-    #[serde(rename = "entrypoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "entrypoint",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub entrypoint: Option<String>,
     ///The Service environment.
     #[serde(rename = "environment")]
@@ -1388,14 +1005,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionServicesAdditionalP
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionServices {
     #[serde(
         flatten,
@@ -1407,14 +1017,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionServices {
         PagesProjectForProviderDeploymentConfigsProductionServicesAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionVectorizeBindingsAdditionalProperty {
     #[serde(rename = "index_name")]
     pub index_name: String,
@@ -1425,14 +1028,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionVectorizeBindingsAd
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProductionVectorizeBindings {
     #[serde(
         flatten,
@@ -1444,20 +1040,15 @@ pub struct PagesProjectForProviderDeploymentConfigsProductionVectorizeBindings {
         PagesProjectForProviderDeploymentConfigsProductionVectorizeBindingsAdditionalProperty,
     >,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigsProduction {
     ///Constellation bindings used for Pages Functions.
-    #[serde(rename = "ai_bindings", default, skip_serializing_if = "Option::is_none")]
-    pub ai_bindings: Option<
-        PagesProjectForProviderDeploymentConfigsProductionAiBindings,
-    >,
+    #[serde(
+        rename = "ai_bindings",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub ai_bindings: Option<PagesProjectForProviderDeploymentConfigsProductionAiBindings>,
     ///Whether to always use the latest compatibility date for Pages Functions.
     #[serde(rename = "always_use_latest_compatibility_date")]
     pub always_use_latest_compatibility_date: bool,
@@ -1467,9 +1058,8 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub analytics_engine_datasets: Option<
-        PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineDatasets,
-    >,
+    pub analytics_engine_datasets:
+        Option<PagesProjectForProviderDeploymentConfigsProductionAnalyticsEngineDatasets>,
     ///Browser bindings used for Pages Functions.
     #[serde(rename = "browsers", default, skip_serializing_if = "Option::is_none")]
     pub browsers: Option<PagesProjectForProviderDeploymentConfigsProductionBrowsers>,
@@ -1483,19 +1073,20 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
     #[serde(rename = "compatibility_flags")]
     pub compatibility_flags: Vec<String>,
     ///D1 databases used for Pages Functions.
-    #[serde(rename = "d1_databases", default, skip_serializing_if = "Option::is_none")]
-    pub d1_databases: Option<
-        PagesProjectForProviderDeploymentConfigsProductionD1Databases,
-    >,
+    #[serde(
+        rename = "d1_databases",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub d1_databases: Option<PagesProjectForProviderDeploymentConfigsProductionD1Databases>,
     ///Durable Object namespaces used for Pages Functions.
     #[serde(
         rename = "durable_object_namespaces",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub durable_object_namespaces: Option<
-        PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamespaces,
-    >,
+    pub durable_object_namespaces:
+        Option<PagesProjectForProviderDeploymentConfigsProductionDurableObjectNamespaces>,
     #[serde(rename = "env_vars")]
     pub env_vars: PagesEnvVars,
     ///Whether to fail open when the deployment config cannot be applied.
@@ -1507,14 +1098,15 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub hyperdrive_bindings: Option<
-        PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindings,
-    >,
+    pub hyperdrive_bindings:
+        Option<PagesProjectForProviderDeploymentConfigsProductionHyperdriveBindings>,
     ///KV namespaces used for Pages Functions.
-    #[serde(rename = "kv_namespaces", default, skip_serializing_if = "Option::is_none")]
-    pub kv_namespaces: Option<
-        PagesProjectForProviderDeploymentConfigsProductionKvNamespaces,
-    >,
+    #[serde(
+        rename = "kv_namespaces",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub kv_namespaces: Option<PagesProjectForProviderDeploymentConfigsProductionKvNamespaces>,
     ///Limits for Pages Functions.
     #[serde(rename = "limits", default, skip_serializing_if = "Option::is_none")]
     pub limits: Option<PagesProjectForProviderDeploymentConfigsProductionLimits>,
@@ -1524,9 +1116,8 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub mtls_certificates: Option<
-        PagesProjectForProviderDeploymentConfigsProductionMtlsCertificates,
-    >,
+    pub mtls_certificates:
+        Option<PagesProjectForProviderDeploymentConfigsProductionMtlsCertificates>,
     ///Placement setting used for Pages Functions.
     #[serde(rename = "placement", default, skip_serializing_if = "Option::is_none")]
     pub placement: Option<PagesProjectForProviderDeploymentConfigsProductionPlacement>,
@@ -1536,11 +1127,13 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub queue_producers: Option<
-        PagesProjectForProviderDeploymentConfigsProductionQueueProducers,
-    >,
+    pub queue_producers: Option<PagesProjectForProviderDeploymentConfigsProductionQueueProducers>,
     ///R2 buckets used for Pages Functions.
-    #[serde(rename = "r2_buckets", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "r2_buckets",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub r2_buckets: Option<PagesProjectForProviderDeploymentConfigsProductionR2Buckets>,
     ///Services used for Pages Functions.
     #[serde(rename = "services", default, skip_serializing_if = "Option::is_none")]
@@ -1554,9 +1147,8 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    pub vectorize_bindings: Option<
-        PagesProjectForProviderDeploymentConfigsProductionVectorizeBindings,
-    >,
+    pub vectorize_bindings:
+        Option<PagesProjectForProviderDeploymentConfigsProductionVectorizeBindings>,
     ///Hash of the Wrangler configuration used for the deployment.
     #[serde(
         rename = "wrangler_config_hash",
@@ -1565,14 +1157,7 @@ pub struct PagesProjectForProviderDeploymentConfigsProduction {
     )]
     pub wrangler_config_hash: Option<String>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderDeploymentConfigs {
     ///Configs for preview deploys.
     #[serde(rename = "preview")]
@@ -1587,14 +1172,7 @@ pub struct PagesProjectForProviderDeploymentConfigs {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderLatestDeploymentDeploymentTriggerMetadata {
     ///Where the trigger happened.
     #[serde(rename = "branch")]
@@ -1615,14 +1193,7 @@ pub struct PagesProjectForProviderLatestDeploymentDeploymentTriggerMetadata {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderLatestDeploymentDeploymentTrigger {
     ///Additional info about the trigger.
     #[serde(rename = "metadata")]
@@ -1637,14 +1208,7 @@ pub struct PagesProjectForProviderLatestDeploymentDeploymentTrigger {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProviderLatestDeployment {
     ///A list of alias URLs pointing to this deployment.
     #[serde(rename = "aliases", default, skip_serializing_if = "Option::is_none")]
@@ -1682,7 +1246,11 @@ pub struct PagesProjectForProviderLatestDeployment {
     #[serde(rename = "short_id")]
     pub short_id: String,
     ///Why the deployment was skipped.
-    #[serde(rename = "skip_reason", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "skip_reason",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub skip_reason: Option<String>,
     #[serde(rename = "source")]
     pub source: PagesSource,
@@ -1693,19 +1261,20 @@ pub struct PagesProjectForProviderLatestDeployment {
     #[serde(rename = "url")]
     pub url: String,
     ///Whether the deployment uses functions.
-    #[serde(rename = "uses_functions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "uses_functions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub uses_functions: Option<bool>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PagesProjectForProvider {
-    #[serde(rename = "build_config", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "build_config",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub build_config: Option<PagesBuildConfig>,
     #[serde(rename = "canonical_deployment")]
     pub canonical_deployment: PagesProjectForProviderCanonicalDeployment,
@@ -1731,7 +1300,7 @@ pub struct PagesProjectForProvider {
     PartialEq,
     serde::Serialize,
     serde::Deserialize,
-    schemars::JsonSchema
+    schemars::JsonSchema,
 )]
 #[kube(
     group = "cloudflare.kube.nas1k.dev",
@@ -1747,29 +1316,21 @@ pub struct PagesProjectSpec {
     pub management: koof::managed::ManagedResourceSpec,
 }
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct PagesProjectAtProvider {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 }
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct PagesProjectStatus {
-    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "atProvider",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub at_provider: Option<PagesProjectAtProvider>,
     #[serde(
         rename = "observedGeneration",
@@ -1786,70 +1347,58 @@ pub async fn observe(
     resource: &PagesProject,
 ) -> Result<koof::reconciler::Observation, koof::error::ReconcileError> {
     let account_id = (async {
-        let root_namespace = kube::ResourceExt::namespace(resource)
-            .ok_or_else(|| {
-                koof::error::ResolveValueError::Missing(
-                    "resource has no namespace".into(),
-                )
-            })?;
+        let root_namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+            koof::error::ResolveValueError::Missing("resource has no namespace".into())
+        })?;
         let reference_0 = (resource.spec.for_provider.account_ref)
             .as_ref()
             .ok_or_else(|| {
-                koof::error::ResolveValueError::Missing(
-                    format!(
-                        "resource reference {} is not set",
-                        "spec.forProvider.accountRef",
-                    ),
-                )
+                koof::error::ResolveValueError::Missing(format!(
+                    "resource reference {} is not set",
+                    "spec.forProvider.accountRef",
+                ))
             })?;
         let namespace_0 = reference_0
             .namespace
             .clone()
             .unwrap_or_else(|| root_namespace.clone());
-        let api_0: kube::Api<crate::generated::account::Account> = kube::Api::namespaced(
-            kube_client.clone(),
-            &namespace_0,
-        );
+        let api_0: kube::Api<crate::generated::account::Account> =
+            kube::Api::namespaced(kube_client.clone(), &namespace_0);
         let related_0 = api_0.get(&reference_0.name).await?;
-        (async {
-            koof::reference::resolve_field_value(&related_0, "status.atProvider.id")
-        })
-            .await
+        (async { koof::reference::resolve_field_value(&related_0, "status.atProvider.id") }).await
     })
-        .await?
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing(
-                format!("could not resolve path parameter {}", "account_id",),
-            )
-        })?;
+    .await?
+    .ok_or_else(|| {
+        koof::error::ResolveValueError::Missing(format!(
+            "could not resolve path parameter {}",
+            "account_id",
+        ))
+    })?;
     let project_name = (async {
         let mut resolved: Option<String> = None;
         if resolved.is_none() {
-            resolved = (async {
-                koof::reference::resolve_field_value(resource, "status.atProvider.id")
-            })
-                .await?;
+            resolved =
+                (async { koof::reference::resolve_field_value(resource, "status.atProvider.id") })
+                    .await?;
         }
         if resolved.is_none() {
-            resolved = (async {
-                koof::reference::resolve_field_value(resource, "spec.resourceName")
-            })
-                .await?;
+            resolved =
+                (async { koof::reference::resolve_field_value(resource, "spec.resourceName") })
+                    .await?;
         }
         if resolved.is_none() {
-            resolved = (async {
-                koof::reference::resolve_field_value(resource, "metadata.name")
-            })
-                .await?;
+            resolved =
+                (async { koof::reference::resolve_field_value(resource, "metadata.name") }).await?;
         }
         Ok::<Option<String>, koof::error::ResolveValueError>(resolved)
     })
-        .await?
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing(
-                format!("could not resolve path parameter {}", "project_name",),
-            )
-        })?;
+    .await?
+    .ok_or_else(|| {
+        koof::error::ResolveValueError::Missing(format!(
+            "could not resolve path parameter {}",
+            "project_name",
+        ))
+    })?;
     let request = provider_client.pages_project_get_project(&account_id, &project_name);
     let credentials = resolve_credentials(kube_client, resource).await?;
     let request = request.with_credentials(&credentials);
@@ -1864,50 +1413,43 @@ pub async fn resolve_credentials(
     client: &kube::Client,
     resource: &PagesProject,
 ) -> Result<crate::generated::client::ApiTokenCredential, koof::error::CredentialError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!("{} has no namespace", "PagesProject",),
-            )
-        })?;
+    let namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+        koof::error::CredentialError::MissingValue(format!("{} has no namespace", "PagesProject",))
+    })?;
     let reference_0 = (resource.spec.for_provider.account_ref)
         .as_ref()
         .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!(
-                    "resource reference {} is not set", "spec.forProvider.accountRef",
-                ),
-            )
+            koof::error::CredentialError::MissingValue(format!(
+                "resource reference {} is not set",
+                "spec.forProvider.accountRef",
+            ))
         })?;
-    let namespace_0 = reference_0.namespace.clone().unwrap_or_else(|| namespace.clone());
-    let api_0: kube::Api<crate::generated::account::Account> = kube::Api::namespaced(
-        client.clone(),
-        &namespace_0,
-    );
+    let namespace_0 = reference_0
+        .namespace
+        .clone()
+        .unwrap_or_else(|| namespace.clone());
+    let api_0: kube::Api<crate::generated::account::Account> =
+        kube::Api::namespaced(client.clone(), &namespace_0);
     let related_0 = api_0.get(&reference_0.name).await?;
     let selector = (related_0.spec.for_provider.api_token_secret_ref)
         .as_ref()
         .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!(
-                    "credential field {} is not set",
-                    "spec.forProvider.apiTokenSecretRef",
-                ),
-            )
+            koof::error::CredentialError::MissingValue(format!(
+                "credential field {} is not set",
+                "spec.forProvider.apiTokenSecretRef",
+            ))
         })?;
-    let value = koof::reference::resolve_secret_key(client, &namespace_0, selector)
-        .await?;
-    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+    let value = koof::reference::resolve_secret_key(client, &namespace_0, selector).await?;
+    crate::generated::client::ApiTokenCredential::new(value)
 }
 pub async fn update_status(
     client: &kube::Client,
     resource: &PagesProject,
     observation: &koof::reconciler::Observation,
 ) -> Result<(), koof::error::ReconcileError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing("resource has no namespace".into())
-        })?;
+    let namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+        koof::error::ResolveValueError::Missing("resource has no namespace".into())
+    })?;
     let name = kube::ResourceExt::name_any(resource);
     let at_provider: Option<PagesProjectAtProvider> = observation
         .at_provider
@@ -1915,27 +1457,27 @@ pub async fn update_status(
         .map(serde_json::from_value)
         .transpose()?;
     let condition_status = if observation.exists { "True" } else { "False" };
-    let reason = if observation.exists { "Available" } else { "NotFound" };
+    let reason = if observation.exists {
+        "Available"
+    } else {
+        "NotFound"
+    };
     let message = if observation.exists {
         "External resource exists"
     } else {
         "External resource does not exist"
     };
-    let previous_condition = resource
-        .status
-        .as_ref()
-        .and_then(|status| {
-            status.conditions.iter().find(|condition| { condition.type_ == "Ready" })
-        });
+    let previous_condition = resource.status.as_ref().and_then(|status| {
+        status
+            .conditions
+            .iter()
+            .find(|condition| condition.type_ == "Ready")
+    });
     let last_transition_time = previous_condition
-        .filter(|condition| {
-            condition.status == condition_status && condition.reason == reason
-        })
-        .map(|condition| { condition.last_transition_time.clone() })
+        .filter(|condition| condition.status == condition_status && condition.reason == reason)
+        .map(|condition| condition.last_transition_time.clone())
         .unwrap_or_else(|| {
-            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(
-                jiff::Timestamp::now(),
-            )
+            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(jiff::Timestamp::now())
         });
     let condition = k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition {
         type_: "Ready".into(),
@@ -1958,11 +1500,11 @@ pub async fn update_status(
         return Ok(());
     }
     api.patch_status(
-            &name,
-            &kube::api::PatchParams::default(),
-            &kube::api::Patch::Merge(&patch),
-        )
-        .await?;
+        &name,
+        &kube::api::PatchParams::default(),
+        &kube::api::Patch::Merge(&patch),
+    )
+    .await?;
     Ok(())
 }
 pub async fn reconcile(
@@ -1972,11 +1514,11 @@ pub async fn reconcile(
     >,
 ) -> Result<kube::runtime::controller::Action, koof::error::ReconcileError> {
     let observation = observe(
-            &context.kube_client,
-            &context.provider_client,
-            resource.as_ref(),
-        )
-        .await?;
+        &context.kube_client,
+        &context.provider_client,
+        resource.as_ref(),
+    )
+    .await?;
     update_status(&context.kube_client, resource.as_ref(), &observation).await?;
     let requeue_after = if observation.exists {
         std::time::Duration::from_secs(300)
@@ -2008,14 +1550,14 @@ pub async fn run_controller(
             match result {
                 Ok((object, action)) => {
                     tracing::debug!(
-                        resource = "PagesProject", ? object, ? action,
+                        resource = "PagesProject",
+                        ?object,
+                        ?action,
                         "reconciliation completed",
                     );
                 }
                 Err(error) => {
-                    tracing::error!(
-                        resource = "PagesProject", ? error, "reconciliation failed",
-                    );
+                    tracing::error!(resource = "PagesProject", ?error, "reconciliation failed",);
                 }
             }
         })

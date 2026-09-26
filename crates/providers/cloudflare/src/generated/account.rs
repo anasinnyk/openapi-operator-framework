@@ -1,16 +1,14 @@
 //! This file is generated. Do not edit manually.
+#![allow(clippy::pedantic)]
 pub type IamCommonComponentsSchemasIdentifier = String;
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct AccountForProviderManagedBy {
     ///ID of the parent Organization, if one exists
-    #[serde(rename = "parent_org_id", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "parent_org_id",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub parent_org_id: Option<String>,
     ///Name of the parent Organization, if one exists
     #[serde(
@@ -26,14 +24,7 @@ pub struct AccountForProviderManagedBy {
     )]
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct AccountForProviderSettings {
     ///Sets an abuse contact email to notify for abuse reports.
     #[serde(
@@ -43,7 +34,7 @@ pub struct AccountForProviderSettings {
     )]
     pub abuse_contact_email: Option<String>,
     /**Indicates whether membership in this account requires that
-Two-Factor Authentication is enabled*/
+    Two-Factor Authentication is enabled*/
     #[serde(
         rename = "enforce_twofactor",
         default,
@@ -58,19 +49,16 @@ Two-Factor Authentication is enabled*/
     pub additional_properties: std::collections::BTreeMap<String, serde_json::Value>,
 }
 pub type IamAccountType = serde_json::Value;
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct AccountForProvider {
     #[serde(rename = "id")]
     pub id: IamCommonComponentsSchemasIdentifier,
     ///Parent container details
-    #[serde(rename = "managed_by", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "managed_by",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub managed_by: Option<AccountForProviderManagedBy>,
     ///Account name
     #[serde(rename = "name")]
@@ -90,7 +78,7 @@ pub struct AccountForProvider {
     PartialEq,
     serde::Serialize,
     serde::Deserialize,
-    schemars::JsonSchema
+    schemars::JsonSchema,
 )]
 #[kube(
     group = "cloudflare.kube.nas1k.dev",
@@ -106,29 +94,21 @@ pub struct AccountSpec {
     pub management: koof::managed::ManagedResourceSpec,
 }
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct AccountAtProvider {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 }
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct AccountStatus {
-    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "atProvider",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub at_provider: Option<AccountAtProvider>,
     #[serde(
         rename = "observedGeneration",
@@ -144,15 +124,15 @@ pub async fn observe(
     provider_client: &crate::generated::client::ProviderClient,
     resource: &Account,
 ) -> Result<koof::reconciler::Observation, koof::error::ReconcileError> {
-    let account_id = (async {
-        koof::reference::resolve_field_value(resource, "status.atProvider.id")
-    })
-        .await?
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing(
-                format!("could not resolve path parameter {}", "account_id",),
-            )
-        })?;
+    let account_id =
+        (async { koof::reference::resolve_field_value(resource, "status.atProvider.id") })
+            .await?
+            .ok_or_else(|| {
+                koof::error::ResolveValueError::Missing(format!(
+                    "could not resolve path parameter {}",
+                    "account_id",
+                ))
+            })?;
     let request = provider_client.accounts_account_details(&account_id);
     let credentials = resolve_credentials(kube_client, resource).await?;
     let request = request.with_credentials(&credentials);
@@ -167,34 +147,28 @@ pub async fn resolve_credentials(
     client: &kube::Client,
     resource: &Account,
 ) -> Result<crate::generated::client::ApiTokenCredential, koof::error::CredentialError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!("{} has no namespace", "Account",),
-            )
-        })?;
+    let namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+        koof::error::CredentialError::MissingValue(format!("{} has no namespace", "Account",))
+    })?;
     let selector = (resource.spec.for_provider.api_token_secret_ref)
         .as_ref()
         .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!(
-                    "credential field {} is not set",
-                    "spec.forProvider.apiTokenSecretRef",
-                ),
-            )
+            koof::error::CredentialError::MissingValue(format!(
+                "credential field {} is not set",
+                "spec.forProvider.apiTokenSecretRef",
+            ))
         })?;
     let value = koof::reference::resolve_secret_key(client, &namespace, selector).await?;
-    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+    crate::generated::client::ApiTokenCredential::new(value)
 }
 pub async fn update_status(
     client: &kube::Client,
     resource: &Account,
     observation: &koof::reconciler::Observation,
 ) -> Result<(), koof::error::ReconcileError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing("resource has no namespace".into())
-        })?;
+    let namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+        koof::error::ResolveValueError::Missing("resource has no namespace".into())
+    })?;
     let name = kube::ResourceExt::name_any(resource);
     let at_provider: Option<AccountAtProvider> = observation
         .at_provider
@@ -202,27 +176,27 @@ pub async fn update_status(
         .map(serde_json::from_value)
         .transpose()?;
     let condition_status = if observation.exists { "True" } else { "False" };
-    let reason = if observation.exists { "Available" } else { "NotFound" };
+    let reason = if observation.exists {
+        "Available"
+    } else {
+        "NotFound"
+    };
     let message = if observation.exists {
         "External resource exists"
     } else {
         "External resource does not exist"
     };
-    let previous_condition = resource
-        .status
-        .as_ref()
-        .and_then(|status| {
-            status.conditions.iter().find(|condition| { condition.type_ == "Ready" })
-        });
+    let previous_condition = resource.status.as_ref().and_then(|status| {
+        status
+            .conditions
+            .iter()
+            .find(|condition| condition.type_ == "Ready")
+    });
     let last_transition_time = previous_condition
-        .filter(|condition| {
-            condition.status == condition_status && condition.reason == reason
-        })
-        .map(|condition| { condition.last_transition_time.clone() })
+        .filter(|condition| condition.status == condition_status && condition.reason == reason)
+        .map(|condition| condition.last_transition_time.clone())
         .unwrap_or_else(|| {
-            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(
-                jiff::Timestamp::now(),
-            )
+            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(jiff::Timestamp::now())
         });
     let condition = k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition {
         type_: "Ready".into(),
@@ -245,11 +219,11 @@ pub async fn update_status(
         return Ok(());
     }
     api.patch_status(
-            &name,
-            &kube::api::PatchParams::default(),
-            &kube::api::Patch::Merge(&patch),
-        )
-        .await?;
+        &name,
+        &kube::api::PatchParams::default(),
+        &kube::api::Patch::Merge(&patch),
+    )
+    .await?;
     Ok(())
 }
 pub async fn reconcile(
@@ -259,11 +233,11 @@ pub async fn reconcile(
     >,
 ) -> Result<kube::runtime::controller::Action, koof::error::ReconcileError> {
     let observation = observe(
-            &context.kube_client,
-            &context.provider_client,
-            resource.as_ref(),
-        )
-        .await?;
+        &context.kube_client,
+        &context.provider_client,
+        resource.as_ref(),
+    )
+    .await?;
     update_status(&context.kube_client, resource.as_ref(), &observation).await?;
     let requeue_after = if observation.exists {
         std::time::Duration::from_secs(300)
@@ -295,14 +269,14 @@ pub async fn run_controller(
             match result {
                 Ok((object, action)) => {
                     tracing::debug!(
-                        resource = "Account", ? object, ? action,
+                        resource = "Account",
+                        ?object,
+                        ?action,
                         "reconciliation completed",
                     );
                 }
                 Err(error) => {
-                    tracing::error!(
-                        resource = "Account", ? error, "reconciliation failed",
-                    );
+                    tracing::error!(resource = "Account", ?error, "reconciliation failed",);
                 }
             }
         })

@@ -32,6 +32,12 @@ impl<T> ApiRequest<T>
 where
     T: serde::de::DeserializeOwned,
 {
+    /// Sends the request and decodes a successful JSON response.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ClientError`] when the request fails, the status is not successful, or
+    /// the body cannot be decoded.
     pub async fn send(self) -> Result<T, ClientError> {
         let response = self.request.send().await?.error_for_status()?;
 
@@ -46,6 +52,13 @@ where
         Ok(serde_json::from_slice(body)?)
     }
 
+    /// Sends the request and decodes a successful JSON response; `404 Not Found`
+    /// becomes `None`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ClientError`] when the request fails, the status is neither successful
+    /// nor `404`, or the body cannot be decoded.
     pub async fn send_optional(self) -> Result<Option<T>, ClientError> {
         let response = self.request.send().await?;
 
@@ -72,6 +85,11 @@ pub struct HeaderCredential {
 }
 
 impl HeaderCredential {
+    /// Creates a credential sent as a sensitive header.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CredentialError`] when the header name or value is invalid.
     pub fn new(name: impl AsRef<str>, value: impl AsRef<str>) -> Result<Self, CredentialError> {
         let name = reqwest::header::HeaderName::from_bytes(name.as_ref().as_bytes())?;
 
@@ -92,6 +110,11 @@ impl ApiCredential for HeaderCredential {
 pub struct BearerCredential(HeaderCredential);
 
 impl BearerCredential {
+    /// Creates an `Authorization: Bearer <token>` credential.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CredentialError`] when the token is not a valid header value.
     pub fn new(token: impl AsRef<str>) -> Result<Self, CredentialError> {
         Ok(Self(HeaderCredential::new(
             reqwest::header::AUTHORIZATION.as_str(),

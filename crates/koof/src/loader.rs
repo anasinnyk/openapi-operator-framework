@@ -40,6 +40,13 @@ pub enum LoaderError {
     InvalidOpenApi(String),
 }
 
+/// Reads an `OpenAPI` document, applies overlays in the given order and extracts a
+/// [`ProviderIr`].
+///
+/// # Errors
+///
+/// Returns an error when a file cannot be read or parsed, an overlay action matches
+/// nothing, or the resulting document cannot be converted to [`ProviderIr`].
 pub fn load(openapi_path: &Path, overlay_paths: &[PathBuf]) -> Result<ProviderIr> {
     let source = fs::read_to_string(openapi_path)
         .with_context(|| format!("cannot read {}", openapi_path.display()))?;

@@ -3,7 +3,9 @@ use crate::{
         errors::GeneratorError,
         naming::{field_ident, type_ident},
     },
-    ir::{AdditionalPropertiesIr, FieldIr, OperationIr, ProviderIr, SchemaIr, SchemaName},
+    ir::{
+        AdditionalPropertiesIr, FieldIr, HttpMethod, OperationIr, ProviderIr, SchemaIr, SchemaName,
+    },
 };
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use proc_macro2::TokenStream;
@@ -674,7 +676,13 @@ pub fn generate_http_client(
         };
 
         let path = &operation.path;
-        let method = operation.method.as_str();
+        let method = match operation.method {
+            HttpMethod::GET => quote!(reqwest::Method::GET),
+            HttpMethod::POST => quote!(reqwest::Method::POST),
+            HttpMethod::PUT => quote!(reqwest::Method::PUT),
+            HttpMethod::PATCH => quote!(reqwest::Method::PATCH),
+            HttpMethod::DELETE => quote!(reqwest::Method::DELETE),
+        };
 
         methods.push(quote! {
             pub fn #method_ident(
@@ -692,12 +700,8 @@ pub fn generate_http_client(
                     path,
                 );
 
-                let method = reqwest::Method::from_bytes(
-                    #method.as_bytes()
-                ).expect("validated HTTP method");
-
                 #[allow(unused_mut)]
-                let mut request = self.http.request(method, url);
+                let mut request = self.http.request(#method, url);
                 #apply_body
 
                 koof::api::ApiRequest::new(request)

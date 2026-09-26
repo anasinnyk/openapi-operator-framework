@@ -1,15 +1,13 @@
 //! This file is generated. Do not edit manually.
-#[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
-)]
+#![allow(clippy::pedantic)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct RulesetForProvider {
     ///An informative description of the ruleset.
-    #[serde(rename = "description", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "description",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub description: Option<String>,
     #[serde(rename = "id")]
     pub id: String,
@@ -28,7 +26,7 @@ pub struct RulesetForProvider {
     PartialEq,
     serde::Serialize,
     serde::Deserialize,
-    schemars::JsonSchema
+    schemars::JsonSchema,
 )]
 #[kube(
     group = "rulesets.cloudflare.kube.nas1k.dev",
@@ -44,29 +42,21 @@ pub struct RulesetSpec {
     pub management: koof::managed::ManagedResourceSpec,
 }
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct RulesetAtProvider {
     #[serde(rename = "id", default, skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
 }
 #[derive(
-    Clone,
-    Debug,
-    Default,
-    PartialEq,
-    serde::Serialize,
-    serde::Deserialize,
-    schemars::JsonSchema
+    Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 pub struct RulesetStatus {
-    #[serde(rename = "atProvider", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "atProvider",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub at_provider: Option<RulesetAtProvider>,
     #[serde(
         rename = "observedGeneration",
@@ -82,51 +72,43 @@ pub async fn observe(
     provider_client: &crate::generated::client::ProviderClient,
     resource: &Ruleset,
 ) -> Result<koof::reconciler::Observation, koof::error::ReconcileError> {
-    let ruleset_id = (async {
-        koof::reference::resolve_field_value(resource, "status.atProvider.id")
-    })
-        .await?
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing(
-                format!("could not resolve path parameter {}", "ruleset_id",),
-            )
-        })?;
-    let zone_id = (async {
-        let root_namespace = kube::ResourceExt::namespace(resource)
+    let ruleset_id =
+        (async { koof::reference::resolve_field_value(resource, "status.atProvider.id") })
+            .await?
             .ok_or_else(|| {
-                koof::error::ResolveValueError::Missing(
-                    "resource has no namespace".into(),
-                )
+                koof::error::ResolveValueError::Missing(format!(
+                    "could not resolve path parameter {}",
+                    "ruleset_id",
+                ))
             })?;
+    let zone_id = (async {
+        let root_namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+            koof::error::ResolveValueError::Missing("resource has no namespace".into())
+        })?;
         let reference_0 = (resource.spec.for_provider.zone_ref)
             .as_ref()
             .ok_or_else(|| {
-                koof::error::ResolveValueError::Missing(
-                    format!(
-                        "resource reference {} is not set", "spec.forProvider.zoneRef",
-                    ),
-                )
+                koof::error::ResolveValueError::Missing(format!(
+                    "resource reference {} is not set",
+                    "spec.forProvider.zoneRef",
+                ))
             })?;
         let namespace_0 = reference_0
             .namespace
             .clone()
             .unwrap_or_else(|| root_namespace.clone());
-        let api_0: kube::Api<crate::generated::zone::Zone> = kube::Api::namespaced(
-            kube_client.clone(),
-            &namespace_0,
-        );
+        let api_0: kube::Api<crate::generated::zone::Zone> =
+            kube::Api::namespaced(kube_client.clone(), &namespace_0);
         let related_0 = api_0.get(&reference_0.name).await?;
-        (async {
-            koof::reference::resolve_field_value(&related_0, "status.atProvider.id")
-        })
-            .await
+        (async { koof::reference::resolve_field_value(&related_0, "status.atProvider.id") }).await
     })
-        .await?
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing(
-                format!("could not resolve path parameter {}", "zone_id",),
-            )
-        })?;
+    .await?
+    .ok_or_else(|| {
+        koof::error::ResolveValueError::Missing(format!(
+            "could not resolve path parameter {}",
+            "zone_id",
+        ))
+    })?;
     let request = provider_client.get_zone_ruleset(&ruleset_id, &zone_id);
     let credentials = resolve_credentials(kube_client, resource).await?;
     let request = request.with_credentials(&credentials);
@@ -141,66 +123,58 @@ pub async fn resolve_credentials(
     client: &kube::Client,
     resource: &Ruleset,
 ) -> Result<crate::generated::client::ApiTokenCredential, koof::error::CredentialError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!("{} has no namespace", "Ruleset",),
-            )
-        })?;
+    let namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+        koof::error::CredentialError::MissingValue(format!("{} has no namespace", "Ruleset",))
+    })?;
     let reference_0 = (resource.spec.for_provider.zone_ref)
         .as_ref()
         .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!("resource reference {} is not set", "spec.forProvider.zoneRef",),
-            )
+            koof::error::CredentialError::MissingValue(format!(
+                "resource reference {} is not set",
+                "spec.forProvider.zoneRef",
+            ))
         })?;
-    let namespace_0 = reference_0.namespace.clone().unwrap_or_else(|| namespace.clone());
-    let api_0: kube::Api<crate::generated::zone::Zone> = kube::Api::namespaced(
-        client.clone(),
-        &namespace_0,
-    );
+    let namespace_0 = reference_0
+        .namespace
+        .clone()
+        .unwrap_or_else(|| namespace.clone());
+    let api_0: kube::Api<crate::generated::zone::Zone> =
+        kube::Api::namespaced(client.clone(), &namespace_0);
     let related_0 = api_0.get(&reference_0.name).await?;
     let reference_1 = (related_0.spec.for_provider.account_ref)
         .as_ref()
         .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!(
-                    "resource reference {} is not set", "spec.forProvider.accountRef",
-                ),
-            )
+            koof::error::CredentialError::MissingValue(format!(
+                "resource reference {} is not set",
+                "spec.forProvider.accountRef",
+            ))
         })?;
     let namespace_1 = reference_1
         .namespace
         .clone()
         .unwrap_or_else(|| namespace_0.clone());
-    let api_1: kube::Api<crate::generated::account::Account> = kube::Api::namespaced(
-        client.clone(),
-        &namespace_1,
-    );
+    let api_1: kube::Api<crate::generated::account::Account> =
+        kube::Api::namespaced(client.clone(), &namespace_1);
     let related_1 = api_1.get(&reference_1.name).await?;
     let selector = (related_1.spec.for_provider.api_token_secret_ref)
         .as_ref()
         .ok_or_else(|| {
-            koof::error::CredentialError::MissingValue(
-                format!(
-                    "credential field {} is not set",
-                    "spec.forProvider.apiTokenSecretRef",
-                ),
-            )
+            koof::error::CredentialError::MissingValue(format!(
+                "credential field {} is not set",
+                "spec.forProvider.apiTokenSecretRef",
+            ))
         })?;
-    let value = koof::reference::resolve_secret_key(client, &namespace_1, selector)
-        .await?;
-    Ok(crate::generated::client::ApiTokenCredential::new(value)?)
+    let value = koof::reference::resolve_secret_key(client, &namespace_1, selector).await?;
+    crate::generated::client::ApiTokenCredential::new(value)
 }
 pub async fn update_status(
     client: &kube::Client,
     resource: &Ruleset,
     observation: &koof::reconciler::Observation,
 ) -> Result<(), koof::error::ReconcileError> {
-    let namespace = kube::ResourceExt::namespace(resource)
-        .ok_or_else(|| {
-            koof::error::ResolveValueError::Missing("resource has no namespace".into())
-        })?;
+    let namespace = kube::ResourceExt::namespace(resource).ok_or_else(|| {
+        koof::error::ResolveValueError::Missing("resource has no namespace".into())
+    })?;
     let name = kube::ResourceExt::name_any(resource);
     let at_provider: Option<RulesetAtProvider> = observation
         .at_provider
@@ -208,27 +182,27 @@ pub async fn update_status(
         .map(serde_json::from_value)
         .transpose()?;
     let condition_status = if observation.exists { "True" } else { "False" };
-    let reason = if observation.exists { "Available" } else { "NotFound" };
+    let reason = if observation.exists {
+        "Available"
+    } else {
+        "NotFound"
+    };
     let message = if observation.exists {
         "External resource exists"
     } else {
         "External resource does not exist"
     };
-    let previous_condition = resource
-        .status
-        .as_ref()
-        .and_then(|status| {
-            status.conditions.iter().find(|condition| { condition.type_ == "Ready" })
-        });
+    let previous_condition = resource.status.as_ref().and_then(|status| {
+        status
+            .conditions
+            .iter()
+            .find(|condition| condition.type_ == "Ready")
+    });
     let last_transition_time = previous_condition
-        .filter(|condition| {
-            condition.status == condition_status && condition.reason == reason
-        })
-        .map(|condition| { condition.last_transition_time.clone() })
+        .filter(|condition| condition.status == condition_status && condition.reason == reason)
+        .map(|condition| condition.last_transition_time.clone())
         .unwrap_or_else(|| {
-            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(
-                jiff::Timestamp::now(),
-            )
+            k8s_openapi::apimachinery::pkg::apis::meta::v1::Time::from(jiff::Timestamp::now())
         });
     let condition = k8s_openapi::apimachinery::pkg::apis::meta::v1::Condition {
         type_: "Ready".into(),
@@ -251,11 +225,11 @@ pub async fn update_status(
         return Ok(());
     }
     api.patch_status(
-            &name,
-            &kube::api::PatchParams::default(),
-            &kube::api::Patch::Merge(&patch),
-        )
-        .await?;
+        &name,
+        &kube::api::PatchParams::default(),
+        &kube::api::Patch::Merge(&patch),
+    )
+    .await?;
     Ok(())
 }
 pub async fn reconcile(
@@ -265,11 +239,11 @@ pub async fn reconcile(
     >,
 ) -> Result<kube::runtime::controller::Action, koof::error::ReconcileError> {
     let observation = observe(
-            &context.kube_client,
-            &context.provider_client,
-            resource.as_ref(),
-        )
-        .await?;
+        &context.kube_client,
+        &context.provider_client,
+        resource.as_ref(),
+    )
+    .await?;
     update_status(&context.kube_client, resource.as_ref(), &observation).await?;
     let requeue_after = if observation.exists {
         std::time::Duration::from_secs(300)
@@ -301,14 +275,14 @@ pub async fn run_controller(
             match result {
                 Ok((object, action)) => {
                     tracing::debug!(
-                        resource = "Ruleset", ? object, ? action,
+                        resource = "Ruleset",
+                        ?object,
+                        ?action,
                         "reconciliation completed",
                     );
                 }
                 Err(error) => {
-                    tracing::error!(
-                        resource = "Ruleset", ? error, "reconciliation failed",
-                    );
+                    tracing::error!(resource = "Ruleset", ?error, "reconciliation failed",);
                 }
             }
         })

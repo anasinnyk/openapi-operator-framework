@@ -44,10 +44,17 @@ pub fn generate_resource(
 }
 
 fn generate_custom_resource(tokens: &[TokenStream]) -> TokenStream {
+    generated_file(&quote!(#(#tokens)*))
+}
+
+/// Wraps generated items with the common file header. Pedantic lints are allowed
+/// because doc comments come verbatim from the upstream `OpenAPI` document.
+fn generated_file(items: &TokenStream) -> TokenStream {
     quote! {
         #![doc = " This file is generated. Do not edit manually."]
+        #![allow(clippy::pedantic)]
 
-        #(#tokens)*
+        #items
     }
 }
 
@@ -792,6 +799,9 @@ fn field_path_access(root: TokenStream, path: &FieldPath) -> Result<TokenStream,
     })
 }
 
+// Duplicates the reference traversal of `generate_related_identifier`; both move into
+// the generic runtime in phase 5 of docs/refactor-plan.md.
+#[allow(clippy::too_many_lines)]
 pub fn generate_resolve_credentials(
     ir: &ProviderIr,
     resource_name: &ResourceName,
@@ -960,11 +970,7 @@ pub fn generate_resolve_credentials(
             )
             .await?;
 
-            Ok(
-                crate::generated::client::#credential_ident::new(
-                    value,
-                )?
-            )
+            crate::generated::client::#credential_ident::new(value)
         }
     })
 }
@@ -1073,11 +1079,11 @@ pub fn generate_client_file(ir: &ProviderIr) -> Result<GeneratedFile, GeneratorE
     let client = generate_http_client(ir, &mut schema_codegen)?;
     let declarations = schema_codegen.finish();
 
-    let content = quote! {
+    let content = generated_file(&quote! {
         #(#declarations)*
         #credentials
         #client
-    };
+    });
 
     Ok(GeneratedFile {
         path: "src/generated/client.rs".into(),

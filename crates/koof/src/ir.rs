@@ -34,6 +34,7 @@ impl AsRef<str> for OperationId {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum FieldSelectionModeIr {
     All,
     Explicit,
@@ -66,6 +67,7 @@ pub struct ResourceIr {
     pub spec_schema: SchemaName,
     #[serde(default)]
     pub identifiers: BTreeMap<String, ValueExpr>,
+    #[serde(default)]
     pub field_selection: FieldSelectionIr,
     #[serde(default)]
     pub references: BTreeMap<String, ReferenceIr>,
@@ -224,6 +226,9 @@ pub enum SchemaIr {
     Any,
 }
 
+// Mirrors the boolean flags of an OpenAPI property; `SchemaIr`/`FieldIr` are
+// replaced by typify-generated types in phase 4 of docs/refactor-plan.md.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FieldIr {
     pub schema: SchemaIr,
@@ -286,14 +291,12 @@ pub enum SecuritySchemeIr {
 #[cfg(test)]
 mod test {
     use super::*;
-    use serde_yaml;
 
     const FIXTURE: &str = include_str!("fixtures/minimal-provider.yaml");
 
     #[test]
-    fn minimal_provider_fixture_describes_the_ir() {
-        let ir: ProviderIr =
-            serde_yaml::from_str(FIXTURE).expect("fixture must be valid ProviderIr");
+    fn minimal_provider_fixture_describes_the_ir() -> Result<(), serde_yaml::Error> {
+        let ir: ProviderIr = serde_yaml::from_str(FIXTURE)?;
 
         assert_eq!(ir.version, 1);
         assert_eq!(ir.provider, "cloudflare");
@@ -303,19 +306,31 @@ mod test {
         assert_eq!(dns_record.kind, "DNSRecord");
         assert_eq!(dns_record.references["zone"].target.0, "zone");
         assert_eq!(
-            dns_record.credentials.as_ref().unwrap().source,
-            CredentialSourceIr::Related {
+            dns_record
+                .credentials
+                .as_ref()
+                .map(|credentials| &credentials.source),
+            Some(&CredentialSourceIr::Related {
                 via: vec!["zone".to_string(), "account".to_string()]
-            }
+            })
         );
+        assert_eq!(
+            dns_record.field_selection.mode,
+            FieldSelectionModeIr::Explicit
+        );
+        assert_eq!(dns_record.field_selection.for_provider.len(), 2);
+
+        let account = &ir.resources[&ResourceName("account".into())];
+        assert_eq!(account.field_selection, FieldSelectionIr::default());
 
         let get = &ir.operations[&OperationId("dns_record.get".into())];
         assert_eq!(get.method, HttpMethod::GET);
         assert_eq!(get.path_parameters.len(), 2);
 
-        let yaml = serde_yaml::to_string(&ir).expect("ProviderIr must serialize");
-        let decoded: ProviderIr =
-            serde_yaml::from_str(&yaml).expect("serialized IR must deserialize");
+        let yaml = serde_yaml::to_string(&ir)?;
+        let decoded: ProviderIr = serde_yaml::from_str(&yaml)?;
         assert_eq!(decoded, ir);
+
+        Ok(())
     }
 }

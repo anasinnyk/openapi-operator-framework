@@ -1,6 +1,13 @@
 version: 1
 provider: cloudflare
 
+schemas: {}
+
+security_schemes:
+  api_token: !Http
+    scheme: bearer
+    bearer_format: null
+
 resources:
   account:
     api_version: cloudflare.example.io/v1alpha1
@@ -56,6 +63,10 @@ resources:
       zone:
         from: spec.zoneRef
         target: zone
+    field_selection:
+      mode: explicit
+      forProvider: [name, content]
+      atProvider: [id, name, content]
     credentials:
       source:
         type: related
